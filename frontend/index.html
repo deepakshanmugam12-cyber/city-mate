@@ -1,0 +1,2232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CITYMATE – Smart Tourist Companion</title>
+  <meta name="description" content="Discover amazing places, essential services, and personalized travel itineraries with CityMate, your smart tourism guide." />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Leaflet CSS for Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Prevent Theme Flash -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('cm_theme');
+        if (!saved) {
+          saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+
+  <!-- CityMate Core Stylesheets -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/map.css" />
+  <link rel="stylesheet" href="css/planner.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+</head>
+<body>
+
+  <!-- ================= Navigation Bar ================= -->
+  <header class="navbar">
+    <div class="container navbar-container">
+      <!-- Brand Logo -->
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <a href="#home" class="brand-logo" onclick="window.app.switchView('home')" title="CityMate - Smart Tourism Guide">
+          <div class="brand-icon">
+            <img class="brand-custom-img" src="assets/logo.png" alt="CityMate Logo" />
+          </div>
+          <div class="brand-text">CITY<span>MATE</span></div>
+        </a>
+        <button type="button" class="btn-change-logo-mini" onclick="window.app.openLogoUploadModal()" title="Upload / Customize Logo">
+          <i class="fa-solid fa-camera"></i>
+        </button>
+      </div>
+
+      <!-- Desktop Navigation Menu -->
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link active"><i class="fa-solid fa-house"></i> Home</a></li>
+          <li><a href="places.html" class="nav-link"><i class="fa-solid fa-mountain-sun"></i> Places</a></li>
+          <li><a href="hotels.html" class="nav-link"><i class="fa-solid fa-hotel"></i> Hotels</a></li>
+          <li><a href="restaurants.html" class="nav-link"><i class="fa-solid fa-utensils"></i> Restaurants</a></li>
+          <li><a href="hospitals.html" class="nav-link"><i class="fa-solid fa-hospital"></i> Hospitals</a></li>
+          <li><a href="services.html" class="nav-link"><i class="fa-solid fa-bell-concierge"></i> Services</a></li>
+          <li><a href="map.html" class="nav-link"><i class="fa-solid fa-map-location-dot"></i> Map</a></li>
+          <li><a href="profile.html" class="nav-link"><i class="fa-solid fa-circle-user"></i> Profile</a></li>
+        </ul>
+      </nav>
+
+      <!-- Nav Actions (Book Now CTA, City & User) -->
+      <div class="nav-actions">
+        <!-- Prominent 'Book Now' Call To Action Button -->
+        <button class="btn btn-primary btn-sm btn-nav-book-now" onclick="window.bookingCtrl.openDirectBookingModal()" title="Instant Tourist Spot Ticket Booking" style="box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%); font-weight: 800; border: none; letter-spacing: 0.3px;">
+          <i class="fa-solid fa-ticket"></i> Book Now
+        </button>
+
+        <!-- City Selector Pill Button -->
+        <button class="city-pill-btn" onclick="window.app.openCityModal()" title="Change Selected City">
+          <i class="fa-solid fa-location-dot"></i>
+          <span class="active-city-name">Coimbatore</span>
+          <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: var(--text-muted);"></i>
+        </button>
+
+        <!-- Theme Toggle Button (Dark / Light) -->
+        <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="window.app.toggleTheme()" title="Switch theme" aria-label="Switch theme">
+          <i class="fa-solid fa-sun icon-sun" aria-hidden="true"></i>
+          <i class="fa-solid fa-moon icon-moon" aria-hidden="true"></i>
+        </button>
+
+        <!-- Guest Actions (Supabase Auth) -->
+        <div id="nav-guest-actions" style="display: flex; gap: 8px;">
+          <a href="login.html" class="btn btn-secondary btn-sm" title="Sign In with Supabase">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+          </a>
+          <a href="register.html" class="btn btn-primary btn-sm" title="Register with Supabase">
+            <i class="fa-solid fa-user-plus"></i> Register
+          </a>
+        </div>
+
+        <!-- User Logged In Actions (Supabase Auth) -->
+        <div id="nav-user-actions" style="display: none; align-items: center; gap: 10px;">
+          <a href="profile.html" class="user-nav-btn" style="text-decoration: none;" title="View My Profile">
+            <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
+            <span id="nav-user-name" style="font-weight: 700; font-size: 0.92rem; color: #fff;">Traveler</span>
+          </a>
+          <button class="btn btn-secondary btn-sm" onclick="window.authCtrl.logout()" title="Logout from Supabase">
+            <i class="fa-solid fa-power-off"></i> Logout
+          </button>
+        </div>
+
+        <!-- Mobile Drawer Toggle -->
+        <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Toggle navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= Active City Indicator Banner ================= -->
+  <div class="active-city-bar">
+    <div class="container">
+      <div class="active-city-info">
+        <i class="fa-solid fa-location-crosshairs" style="color: var(--primary-light);"></i>
+        <span>Currently Exploring: <strong id="banner-city-name" class="active-city-name">Coimbatore</strong></span>
+      </div>
+      <div>
+        <span class="city-change-link" onclick="window.app.openCityModal()">Switch City</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN CONTENT WRAPPER ================= -->
+  <main class="main-content">
+
+    <!-- =================================================================
+         1. VIEW: HOME PAGE
+         ================================================================= -->
+    <section id="view-home" class="view-section">
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-bg-shapes"></div>
+        <div class="container hero-content">
+          <div class="hero-badge">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            Next-Gen Smart Tourism Guide
+          </div>
+          <h1 class="hero-title">Explore More. Travel Smarter.</h1>
+          <p class="hero-subtitle">
+            Discover amazing places, nearby essential services, and personalized travel experiences with CityMate.
+          </p>
+
+          <!-- Hero Universal Search Box -->
+          <div class="hero-search-card">
+            <div class="search-input-group">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="global-search-input" placeholder="Search tourist places, hotels, restaurants, hospitals, ATMs..." />
+              <button id="btn-hero-search" class="btn btn-primary btn-sm">
+                <span>Search</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <div class="hero-search-actions">
+              <div class="quick-filter-chips">
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Popular:</span>
+                <button class="filter-chip" data-cat="hospital" onclick="window.app.switchView('services'); window.servicesCtrl.setType('hospital');" style="color: #ef4444;"><i class="fa-solid fa-hospital"></i> Hospitals</button>
+                <button class="filter-chip" data-cat="temple"><i class="fa-solid fa-om"></i> Temples</button>
+                <button class="filter-chip" data-cat="nature"><i class="fa-solid fa-tree"></i> Nature</button>
+                <button class="filter-chip" data-cat="historical"><i class="fa-solid fa-landmark"></i> Historical</button>
+                <button class="filter-chip" data-cat="beach"><i class="fa-solid fa-umbrella-beach"></i> Beaches</button>
+                <button class="filter-chip" data-cat="rural"><i class="fa-solid fa-wheat-awn"></i> Rural</button>
+                <button class="filter-chip" data-cat="shopping"><i class="fa-solid fa-bag-shopping"></i> Shopping</button>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary btn-sm" onclick="window.app.useCurrentLocation()" title="Detect Nearest City">
+                  <i class="fa-solid fa-crosshairs"></i> Near Me
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="window.app.openCityModal()">
+                  <i class="fa-solid fa-city"></i> Change City
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Action Buttons -->
+          <div class="hero-cta-buttons">
+            <button class="btn btn-primary btn-lg" onclick="window.app.switchView('places')">
+              <i class="fa-solid fa-compass"></i> Explore All Places
+            </button>
+            <button class="btn btn-secondary btn-lg" onclick="window.app.switchView('planner')">
+              <i class="fa-solid fa-route"></i> Smart Trip Planner
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Section -->
+      <section style="padding: 64px 0 32px;">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-tag">Curated Collections</div>
+              <h2 class="section-title">Explore by Category</h2>
+              <p class="section-desc">Hand-picked destinations categorized to fit every travel mood and lifestyle.</p>
+            </div>
+            <a href="#places" class="view-all-link" onclick="window.app.switchView('places')">
+              <span>View All Categories</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
+
+          <div id="home-categories-grid" class="categories-grid">
+            <!-- Dynamic categories populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Featured / Popular Destinations -->
+      <section style="padding: 32px 0 64px;">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-tag">Must-Visit Highlights</div>
+              <h2 class="section-title">Popular in <span class="active-city-name">Coimbatore</span></h2>
+              <p class="section-desc">The most loved and highly-rated tourist spots verified by authentic travelers.</p>
+            </div>
+            <a href="#places" class="view-all-link" onclick="window.app.switchView('places')">
+              <span>Browse All Places</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
+
+          <div id="home-places-grid" class="places-grid">
+            <!-- Dynamic places cards populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Nearby Essential Services Preview -->
+      <section style="padding: 64px 0; background: var(--bg-surface); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+        <div class="container">
+          <div class="section-header">
+            <div>
+              <div class="section-tag">360° Travel Safety & Convenience</div>
+              <h2 class="section-title">Nearby Essential Services</h2>
+              <p class="section-desc">Hotels, top-rated restaurants, emergency care, ATMs, fuel stations and rentals around your location.</p>
+            </div>
+            <a href="#services" class="view-all-link" onclick="window.app.switchView('services')">
+              <span>Explore All Services</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
+
+          <div id="home-services-grid" class="services-grid">
+            <!-- Dynamic services populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Why CityMate Section -->
+      <section class="why-section">
+        <div class="container">
+          <div style="text-align: center; max-width: 680px; margin: 0 auto 52px;">
+            <div class="section-tag">Intelligent Tourism Companion</div>
+            <h2 class="section-title">Why Travelers Choose CityMate</h2>
+            <p class="section-desc">Crafted to eliminate travel confusion and empower every traveler with instant local intelligence.</p>
+          </div>
+
+          <div class="features-grid">
+            <div class="feature-box">
+              <div class="feature-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+              <h3 class="feature-title">Personalized Recommendations</h3>
+              <p class="feature-text">Smart heuristic algorithms match your specific interests, available hours, and budget with precision.</p>
+            </div>
+
+            <div class="feature-box">
+              <div class="feature-icon"><i class="fa-solid fa-shield-heart"></i></div>
+              <h3 class="feature-title">All Essential Services</h3>
+              <p class="feature-text">Never struggle to find clean restrooms, verified 24/7 hospitals, trustworthy ATMs, or local vehicle rentals.</p>
+            </div>
+
+            <div class="feature-box">
+              <div class="feature-icon"><i class="fa-solid fa-route"></i></div>
+              <h3 class="feature-title">Smart Trip Itineraries</h3>
+              <p class="feature-text">Generate balanced day-by-day itineraries with morning sights, lunch bistros, and golden hour viewpoints.</p>
+            </div>
+
+            <div class="feature-box">
+              <div class="feature-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+              <h3 class="feature-title">Interactive Live Maps</h3>
+              <p class="feature-text">Powered by Leaflet and OpenStreetMap for accurate turn-by-turn routing and real geographic coordinates.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- =================================================================
+         2. VIEW: TOURIST PLACES
+         ================================================================= -->
+    <section id="view-places" class="view-section" style="display: none; padding: 48px 0 80px;">
+      <div class="container">
+        <!-- Header -->
+        <div class="section-header">
+          <div>
+            <div class="section-tag">City Discoveries</div>
+            <h2 class="section-title">Tourist Places in <span class="active-city-name">Coimbatore</span></h2>
+            <p class="section-desc">Filter by category, rating, or fee to find your next unforgettable destination.</p>
+          </div>
+          <div>
+            <select id="places-sort-select" class="form-control" style="width: auto; padding: 8px 16px;">
+              <option value="rating_desc">Highest Rated ★</option>
+              <option value="distance_asc">Nearest Distance</option>
+              <option value="fee_asc">Entry Fee: Low to High</option>
+              <option value="fee_desc">Entry Fee: High to Low</option>
+              <option value="name_asc">Name (A-Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Category Filter Chips Bar -->
+        <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 16px; margin-bottom: 32px;">
+          <button class="filter-chip places-filter-chip active" data-cat="all">All Categories</button>
+          <button class="filter-chip places-filter-chip" data-cat="nature"><i class="fa-solid fa-tree"></i> Nature</button>
+          <button class="filter-chip places-filter-chip" data-cat="historical"><i class="fa-solid fa-landmark"></i> Historical</button>
+          <button class="filter-chip places-filter-chip" data-cat="adventure"><i class="fa-solid fa-compass"></i> Adventure</button>
+          <button class="filter-chip places-filter-chip" data-cat="beach"><i class="fa-solid fa-umbrella-beach"></i> Beach</button>
+          <button class="filter-chip places-filter-chip" data-cat="temple"><i class="fa-solid fa-om"></i> Temple</button>
+          <button class="filter-chip places-filter-chip" data-cat="museum"><i class="fa-solid fa-building-columns"></i> Museum</button>
+          <button class="filter-chip places-filter-chip" data-cat="shopping"><i class="fa-solid fa-bag-shopping"></i> Shopping</button>
+          <button class="filter-chip places-filter-chip" data-cat="entertainment"><i class="fa-solid fa-film"></i> Entertainment</button>
+          <button class="filter-chip places-filter-chip" data-cat="rural"><i class="fa-solid fa-wheat-awn"></i> Rural & Village</button>
+        </div>
+
+        <!-- Places Grid -->
+        <div id="tourist-places-grid" class="places-grid">
+          <!-- Populated by window.placesCtrl -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         NEW VIEW: TOURIST SPOT ONLINE TICKET BOOKING SYSTEM
+         ================================================================= -->
+    <section id="view-tickets" class="view-section" style="display: none; padding: 48px 0 80px;">
+      <div class="container">
+        
+        <!-- Booking Hero Banner -->
+        <div class="tickets-hero-banner" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.22) 0%, rgba(16, 185, 129, 0.16) 50%, rgba(13, 148, 136, 0.2) 100%), var(--bg-surface); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: var(--radius-lg); padding: 40px 32px; margin-bottom: 36px; position: relative; overflow: hidden; box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);">
+          <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px; position: relative; z-index: 2;">
+            <div style="max-width: 680px;">
+              <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.15); color: var(--secondary-light); padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; border: 1px solid rgba(56, 189, 248, 0.3); margin-bottom: 14px;">
+                <i class="fa-solid fa-ticket"></i> Official Online E-Ticket Booking System
+              </div>
+              <h1 style="font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 12px; line-height: 1.25;">
+                Tourist Spot Online Ticket Booking
+              </h1>
+              <p style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 0; line-height: 1.6;">
+                Explore popular tourist destinations across all 12 cities. Check real-time ticket prices for adults, children, and seniors, select your preferred visit date and time slot, and receive instant printable digital passes with scannable QR verification.
+              </p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; min-width: 220px;">
+              <button class="btn btn-primary btn-lg" onclick="window.bookingCtrl.openDirectBookingModal()" style="display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4); background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Fast-Track Booking</span>
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="window.app.switchView('bookings')" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>View My Bookings</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feature Highlights Bar -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(56, 189, 248, 0.18); color: var(--secondary-light); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fa-solid fa-city"></i>
+              </div>
+              <div>
+                <strong style="color: #fff; font-size: 0.95rem; display: block;">12 Cities Covered</strong>
+                <span style="color: var(--text-muted); font-size: 0.78rem;">TN, Karnataka &amp; Kerala</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(16, 185, 129, 0.18); color: var(--accent-emerald); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </div>
+              <div>
+                <strong style="color: #fff; font-size: 0.95rem; display: block;">Transparent Pricing</strong>
+                <span style="color: var(--text-muted); font-size: 0.78rem;">Child &amp; Senior Concessions</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(245, 158, 11, 0.18); color: var(--accent-amber); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fa-solid fa-qrcode"></i>
+              </div>
+              <div>
+                <strong style="color: #fff; font-size: 0.95rem; display: block;">Instant Digital E-Pass</strong>
+                <span style="color: var(--text-muted); font-size: 0.78rem;">Printable with QR Code</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(139, 92, 246, 0.18); color: var(--accent-purple); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </div>
+              <div>
+                <strong style="color: #fff; font-size: 0.95rem; display: block;">Easy Cancellation</strong>
+                <span style="color: var(--text-muted); font-size: 0.78rem;">Free prior to visit date</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search & Filter Controls Card -->
+        <div class="tickets-filter-card" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 32px; box-shadow: var(--shadow-md);">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: flex-end;">
+            
+            <!-- Search by Name/Place -->
+            <div>
+              <label class="form-label" style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 6px; display: block;">
+                <i class="fa-solid fa-magnifying-glass"></i> Search Destination
+              </label>
+              <div style="position: relative;">
+                <input type="text" id="tickets-search-input" class="form-control" placeholder="Search by spot name or keyword..." style="padding-left: 38px;" oninput="window.bookingCtrl.onTicketsFilterChange()" />
+                <i class="fa-solid fa-compass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+              </div>
+            </div>
+
+            <!-- Filter by City -->
+            <div>
+              <label class="form-label" style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 6px; display: block;">
+                <i class="fa-solid fa-location-dot" style="color: var(--secondary-light);"></i> Select City / Location
+              </label>
+              <select id="tickets-city-select" class="form-control" onchange="window.bookingCtrl.onTicketsFilterChange()">
+                <option value="all">🌟 All Cities (12 Available)</option>
+                <option value="Coimbatore">Coimbatore, Tamil Nadu</option>
+                <option value="Chennai">Chennai, Tamil Nadu</option>
+                <option value="Ooty">Ooty (Udhagamandalam), Tamil Nadu</option>
+                <option value="Madurai">Madurai, Tamil Nadu</option>
+                <option value="Salem">Salem, Tamil Nadu</option>
+                <option value="Bengaluru">Bengaluru, Karnataka</option>
+                <option value="Kodaikanal">Kodaikanal, Tamil Nadu</option>
+                <option value="Pondicherry">Pondicherry (Puducherry)</option>
+                <option value="Kanyakumari">Kanyakumari, Tamil Nadu</option>
+                <option value="Thanjavur">Thanjavur, Tamil Nadu</option>
+                <option value="Mysuru">Mysuru, Karnataka</option>
+                <option value="Munnar">Munnar, Kerala</option>
+              </select>
+            </div>
+
+            <!-- Filter by Category -->
+            <div>
+              <label class="form-label" style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 6px; display: block;">
+                <i class="fa-solid fa-layer-group"></i> Category
+              </label>
+              <select id="tickets-category-select" class="form-control" onchange="window.bookingCtrl.onTicketsFilterChange()">
+                <option value="all">All Categories</option>
+                <option value="nature">Nature &amp; Hills</option>
+                <option value="temple">Sacred Temples</option>
+                <option value="historical">Historical &amp; Palaces</option>
+                <option value="adventure">Adventure &amp; Wildlife</option>
+                <option value="beach">Coastal Beaches</option>
+                <option value="museum">Museums &amp; Heritage</option>
+                <option value="entertainment">Entertainment &amp; Parks</option>
+                <option value="shopping">Shopping &amp; Crafts</option>
+              </select>
+            </div>
+
+            <!-- Filter by Ticket Price Range -->
+            <div>
+              <label class="form-label" style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 6px; display: block;">
+                <i class="fa-solid fa-indian-rupee-sign" style="color: var(--accent-emerald);"></i> Ticket Price
+              </label>
+              <select id="tickets-price-select" class="form-control" onchange="window.bookingCtrl.onTicketsFilterChange()">
+                <option value="all">All Ticket Prices</option>
+                <option value="free">Free Entry Only (₹0)</option>
+                <option value="under50">Budget (₹1 to ₹50)</option>
+                <option value="50to200">Moderate (₹50 to ₹200)</option>
+                <option value="above200">Premium (₹200+)</option>
+              </select>
+            </div>
+
+            <!-- Sort By -->
+            <div>
+              <label class="form-label" style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 6px; display: block;">
+                <i class="fa-solid fa-arrow-down-short-wide"></i> Sort By
+              </label>
+              <select id="tickets-sort-select" class="form-control" onchange="window.bookingCtrl.onTicketsFilterChange()">
+                <option value="rating_desc">⭐ Top Rated First</option>
+                <option value="fee_asc">₹ Price: Low to High</option>
+                <option value="fee_desc">₹ Price: High to Low</option>
+                <option value="name_asc">🔤 Name: A to Z</option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Quick Category Chips Bar -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--border-subtle); align-items: center;">
+            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Quick Filter:</span>
+            <button class="filter-chip tickets-chip active" data-cat="all" onclick="window.bookingCtrl.setTicketsCategory('all', this)">All</button>
+            <button class="filter-chip tickets-chip" data-cat="nature" onclick="window.bookingCtrl.setTicketsCategory('nature', this)"><i class="fa-solid fa-tree"></i> Nature</button>
+            <button class="filter-chip tickets-chip" data-cat="temple" onclick="window.bookingCtrl.setTicketsCategory('temple', this)"><i class="fa-solid fa-om"></i> Temples</button>
+            <button class="filter-chip tickets-chip" data-cat="historical" onclick="window.bookingCtrl.setTicketsCategory('historical', this)"><i class="fa-solid fa-landmark"></i> Historical</button>
+            <button class="filter-chip tickets-chip" data-cat="beach" onclick="window.bookingCtrl.setTicketsCategory('beach', this)"><i class="fa-solid fa-umbrella-beach"></i> Beaches</button>
+            <button class="filter-chip tickets-chip" data-cat="adventure" onclick="window.bookingCtrl.setTicketsCategory('adventure', this)"><i class="fa-solid fa-compass"></i> Adventure</button>
+            <button class="btn btn-outline btn-sm" onclick="window.bookingCtrl.resetTicketsFilters()" style="margin-left: auto; padding: 4px 12px; font-size: 0.78rem;">
+              <i class="fa-solid fa-rotate-left"></i> Reset All
+            </button>
+          </div>
+        </div>
+
+        <!-- Results Counter & Status Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0;">
+              Available Destinations for Online Booking
+            </h3>
+            <span id="tickets-count-label" style="font-size: 0.85rem; color: var(--text-secondary);">Showing destinations across all cities</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" onclick="window.bookingCtrl.openDirectBookingModal()">
+              <i class="fa-solid fa-sliders"></i> Custom Booking Form
+            </button>
+          </div>
+        </div>
+
+        <!-- Destination Cards Listing Grid -->
+        <div id="tickets-cards-container" class="places-grid">
+          <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--secondary-light);"></i>
+            <p style="margin-top: 14px;">Loading tourist spots and ticket rates...</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =================================================================
+         3. VIEW: RECOMMENDATIONS
+         ================================================================= -->
+    <section id="view-recommendations" class="view-section" style="display: none; padding: 48px 0 80px;">
+      <div class="container" style="max-width: 1100px;">
+        <div style="text-align: center; max-width: 640px; margin: 0 auto 36px;">
+          <div class="section-tag">AI & Heuristic Matching</div>
+          <h2 class="section-title">Personalized Recommendations</h2>
+          <p class="section-desc">Select what you love, set your travel constraints, and let our smart engine surface the most fitting spots.</p>
+        </div>
+
+        <!-- Interactive Questionnaire Card -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 48px; box-shadow: var(--shadow-md);">
+          <!-- Step 1: Interests -->
+          <div style="margin-bottom: 28px;">
+            <label class="form-label" style="font-size: 1rem; color: #fff;">1. What kind of experiences interest you?</label>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+              <button class="filter-chip recom-interest-chip active" data-val="nature"><i class="fa-solid fa-tree"></i> Nature & Hills</button>
+              <button class="filter-chip recom-interest-chip active" data-val="temple"><i class="fa-solid fa-om"></i> Sacred Temples</button>
+              <button class="filter-chip recom-interest-chip" data-val="historical"><i class="fa-solid fa-landmark"></i> Historical Forts & Palaces</button>
+              <button class="filter-chip recom-interest-chip" data-val="adventure"><i class="fa-solid fa-compass"></i> Adventure & Treks</button>
+              <button class="filter-chip recom-interest-chip" data-val="beach"><i class="fa-solid fa-umbrella-beach"></i> Coastal Beaches</button>
+              <button class="filter-chip recom-interest-chip" data-val="shopping"><i class="fa-solid fa-bag-shopping"></i> Shopping & Crafts</button>
+              <button class="filter-chip recom-interest-chip" data-val="food"><i class="fa-solid fa-utensils"></i> Authentic Food</button>
+              <button class="filter-chip recom-interest-chip" data-val="entertainment"><i class="fa-solid fa-film"></i> Theme Parks & Fun</button>
+            </div>
+          </div>
+
+          <!-- Step 2: Budget & Constraints -->
+          <div class="form-row" style="margin-bottom: 24px;">
+            <div>
+              <label class="form-label" style="font-size: 1rem; color: #fff;">2. Budget Preference</label>
+              <div style="display: flex; gap: 10px; margin-top: 8px;">
+                <button class="btn btn-secondary recom-budget-btn" data-val="low" style="flex: 1;">Budget (Free/Low)</button>
+                <button class="btn btn-secondary recom-budget-btn active" data-val="medium" style="flex: 1;">Moderate (₹₹)</button>
+                <button class="btn btn-secondary recom-budget-btn" data-val="high" style="flex: 1;">Luxury (₹₹₹)</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label" style="font-size: 1rem; color: #fff;">3. Available Travel Time</label>
+              <select id="recom-time-select" class="form-control" style="margin-top: 8px;">
+                <option value="half-day">Half-Day (2 - 4 Hours)</option>
+                <option value="full-day" selected>Full-Day (6 - 8 Hours)</option>
+                <option value="multi-day">Multi-Day Tour</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Step 3: Distance Slider -->
+          <div style="margin-bottom: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="form-label" style="font-size: 1rem; color: #fff; margin-bottom: 0;">4. Maximum Distance Preference</label>
+              <span id="recom-distance-val" style="color: var(--primary-light); font-weight: 700;">25 km</span>
+            </div>
+            <input type="range" id="recom-distance-slider" min="5" max="60" value="25" style="width: 100%; accent-color: var(--primary-light);" />
+          </div>
+
+          <button id="btn-get-recommendations" class="btn btn-primary btn-block btn-lg">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Personalized Recommendations
+          </button>
+        </div>
+
+        <!-- Recommendations Grid -->
+        <div class="section-header">
+          <div>
+            <div class="section-tag">Ranked for You</div>
+            <h3 class="section-title">Recommended Places</h3>
+          </div>
+        </div>
+
+        <div id="recommendations-grid" class="places-grid">
+          <!-- Populated by window.recomCtrl -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         4. VIEW: NEARBY ESSENTIAL SERVICES
+         ================================================================= -->
+    <section id="view-services" class="view-section" style="display: none; padding: 48px 0 80px;">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">Travel Utilities</div>
+            <h2 class="section-title">Nearby Essential Services in <span class="active-city-name">Coimbatore</span></h2>
+            <p class="section-desc">Reliable stays, food joints, medical care, cash machines, and car rentals.</p>
+          </div>
+        </div>
+
+        <!-- Service Category Pill Buttons & Actions -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 28px;">
+          <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; flex: 1;">
+            <button class="filter-chip service-pill-filter active" data-type="all">All Services</button>
+            <button class="filter-chip service-pill-filter" data-type="hospital" style="color: #ef4444; font-weight: 700;"><i class="fa-solid fa-hospital"></i> Hospitals &amp; Emergency</button>
+            <button class="filter-chip service-pill-filter" data-type="police" style="color: var(--primary-light); font-weight: 700;"><i class="fa-solid fa-shield-halved"></i> Police &amp; Safety</button>
+            <button class="filter-chip service-pill-filter" data-type="hotel"><i class="fa-solid fa-hotel"></i> Hotels</button>
+            <button class="filter-chip service-pill-filter" data-type="restaurant"><i class="fa-solid fa-utensils"></i> Restaurants</button>
+            <button class="filter-chip service-pill-filter" data-type="atm"><i class="fa-solid fa-money-bill-wave"></i> ATMs</button>
+            <button class="filter-chip service-pill-filter" data-type="petrol_bunk"><i class="fa-solid fa-gas-pump"></i> Petrol Bunks</button>
+            <button class="filter-chip service-pill-filter" data-type="restroom"><i class="fa-solid fa-restroom"></i> Restrooms</button>
+            <button class="filter-chip service-pill-filter" data-type="market"><i class="fa-solid fa-store"></i> Markets</button>
+            <button class="filter-chip service-pill-filter" data-type="rental"><i class="fa-solid fa-car-side"></i> Rental Services</button>
+          </div>
+          <div>
+            <button class="btn btn-primary btn-sm" onclick="window.app.openAddHospitalModal()" style="white-space: nowrap; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35); background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #ef4444;">
+              <i class="fa-solid fa-circle-plus"></i> Add Hospital Details
+            </button>
+          </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div id="services-grid-container" class="services-grid">
+          <!-- Populated by window.servicesCtrl -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         5. VIEW: INTERACTIVE MAP & NAVIGATION
+         ================================================================= -->
+    <section id="view-map" class="view-section" style="display: none;">
+      <div class="map-page-wrapper">
+        <!-- Floating Filter Toolbar & Destination Search -->
+        <div class="map-floating-toolbar">
+          <div class="map-toolbar-left">
+            <!-- Search Destination by Name with Autocomplete -->
+            <div class="map-search-container">
+              <div class="map-search-input-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="map-dest-search-input" placeholder="Search tourist spot by name..." autocomplete="off" />
+                <button id="map-search-clear-btn" class="map-search-clear" style="display: none;" title="Clear search"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div id="map-dest-search-dropdown" class="map-dest-search-dropdown" style="display: none;"></div>
+            </div>
+
+            <!-- Category Filter Chips -->
+            <div class="map-filters-glass">
+              <button class="map-filter-btn active" data-filter="all"><i class="fa-solid fa-layer-group"></i> All</button>
+              <button class="map-filter-btn" data-filter="places"><i class="fa-solid fa-mountain-sun"></i> Places</button>
+              <button class="map-filter-btn" data-filter="hotel"><i class="fa-solid fa-hotel"></i> Hotels</button>
+              <button class="map-filter-btn" data-filter="restaurant"><i class="fa-solid fa-utensils"></i> Food</button>
+              <button class="map-filter-btn" data-filter="hospital"><i class="fa-solid fa-hospital"></i> Medical</button>
+              <button class="map-filter-btn" data-filter="atm"><i class="fa-solid fa-money-bill-wave"></i> ATMs</button>
+              <button class="map-filter-btn" data-filter="petrol_bunk"><i class="fa-solid fa-gas-pump"></i> Petrol</button>
+            </div>
+          </div>
+
+          <div class="map-toolbar-right">
+            <button id="btn-map-locate" class="map-location-btn" title="Locate My Position (GPS)">
+              <i class="fa-solid fa-crosshairs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Manual Starting Location Guidance Banner (shown if GPS denied/unavailable) -->
+        <div id="map-manual-location-banner" class="map-manual-location-banner" style="display: none;">
+          <div class="banner-content">
+            <i class="fa-solid fa-location-crosshairs banner-icon"></i>
+            <span><strong>Location access denied or unavailable:</strong> Click anywhere on the map or drag the starting pin to choose your starting point manually.</span>
+          </div>
+          <button class="btn-banner-close" onclick="window.mapCtrl.dismissManualLocationBanner()" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Fullscreen Leaflet Map Container (reused existing instance) -->
+        <div id="citymate-full-map"></div>
+
+        <!-- Floating Route Directions Drawer -->
+        <div id="map-directions-panel" class="map-directions-panel">
+          <!-- Populated by window.mapCtrl -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         6. VIEW: FAVORITES / WISHLIST
+         ================================================================= -->
+    <section id="view-favorites" class="view-section" style="display: none; padding: 48px 0 80px;">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="section-tag">My Travel Wishlist</div>
+            <h2 class="section-title">Saved Destinations</h2>
+            <p class="section-desc">Keep your dream destinations handy for when you're on the move.</p>
+          </div>
+        </div>
+
+        <div id="favorites-grid" class="places-grid">
+          <!-- Populated by window.app.renderFavoritesView -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         7. VIEW: SMART TRIP PLANNER
+         ================================================================= -->
+    <section id="view-planner" class="view-section" style="display: none;">
+      <div class="planner-container">
+        <div class="planner-intro-card">
+          <div class="badge badge-primary" style="margin-bottom: 8px;">Automated Travel Scheduling</div>
+          <h2 style="font-size: 2.2rem; font-weight: 800; color: #fff;">Smart Trip Planner</h2>
+          <p style="color: var(--text-secondary); max-width: 600px; margin: 8px auto 0;">
+            Specify your destination city, available days, and interests to generate a balanced day-by-day itinerary with verified dining and rest stops.
+          </p>
+        </div>
+
+        <!-- Trip Planner Inputs Card -->
+        <div class="planner-form-card">
+          <div class="form-row" style="margin-bottom: 24px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Destination City</label>
+              <select id="planner-city-select" class="form-control">
+                <option value="1">Coimbatore, Tamil Nadu</option>
+                <option value="2">Chennai, Tamil Nadu</option>
+                <option value="3">Ooty, Tamil Nadu</option>
+                <option value="4">Madurai, Tamil Nadu</option>
+                <option value="5">Salem, Tamil Nadu</option>
+                <option value="6">Bengaluru, Karnataka</option>
+                <option value="7">Kodaikanal, Tamil Nadu</option>
+                <option value="8">Pondicherry, Puducherry</option>
+                <option value="9">Kanyakumari, Tamil Nadu</option>
+                <option value="10">Thanjavur, Tamil Nadu</option>
+                <option value="11">Mysuru, Karnataka</option>
+                <option value="12">Munnar, Kerala</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Duration (Days)</label>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary planner-day-btn" data-days="1" style="flex: 1; min-width: 60px;">1 Day</button>
+                <button type="button" class="btn btn-secondary planner-day-btn active" data-days="2" style="flex: 1; min-width: 60px;">2 Days</button>
+                <button type="button" class="btn btn-secondary planner-day-btn" data-days="3" style="flex: 1; min-width: 60px;">3 Days</button>
+                <button type="button" class="btn btn-secondary planner-day-btn" data-days="4" style="flex: 1; min-width: 60px;">4 Days</button>
+                <button type="button" class="btn btn-secondary planner-day-btn" data-days="5" style="flex: 1; min-width: 60px;">5 Days</button>
+                <button type="button" class="btn btn-secondary planner-day-btn" data-days="7" style="flex: 1; min-width: 60px;">7 Days</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interests -->
+          <div class="form-group">
+            <label class="form-label">Select Trip Interests</label>
+            <div class="interest-checkbox-group">
+              <label class="interest-checkbox-label checked">
+                <input type="checkbox" value="nature" checked /> <i class="fa-solid fa-tree"></i> Nature & Scenery
+              </label>
+              <label class="interest-checkbox-label checked">
+                <input type="checkbox" value="temple" checked /> <i class="fa-solid fa-om"></i> Sacred Temples
+              </label>
+              <label class="interest-checkbox-label checked">
+                <input type="checkbox" value="historical" checked /> <i class="fa-solid fa-landmark"></i> Historical Heritage
+              </label>
+              <label class="interest-checkbox-label checked">
+                <input type="checkbox" value="shopping" checked /> <i class="fa-solid fa-bag-shopping"></i> Shopping & Crafts
+              </label>
+              <label class="interest-checkbox-label">
+                <input type="checkbox" value="adventure" /> <i class="fa-solid fa-compass"></i> Adventure Pursuits
+              </label>
+              <label class="interest-checkbox-label">
+                <input type="checkbox" value="entertainment" /> <i class="fa-solid fa-film"></i> Family Entertainment
+              </label>
+              <label class="interest-checkbox-label">
+                <input type="checkbox" value="rural" /> <i class="fa-solid fa-wheat-awn"></i> Rural & Agro-Tourism
+              </label>
+            </div>
+          </div>
+
+          <!-- Budget Level -->
+          <div class="form-group">
+            <label class="form-label">Budget Level</label>
+            <div class="budget-toggle-group">
+              <div class="budget-toggle-card" data-budget="budget">
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-emerald);">₹</div>
+                <strong style="color: #fff; font-size: 0.95rem;">Budget-Friendly</strong>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">Est. ~₹1,600/day</div>
+              </div>
+              <div class="budget-toggle-card active" data-budget="moderate">
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary-light);">₹₹</div>
+                <strong style="color: #fff; font-size: 0.95rem;">Moderate</strong>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">Est. ~₹3,800/day</div>
+              </div>
+              <div class="budget-toggle-card" data-budget="luxury">
+                <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-amber);">₹₹₹</div>
+                <strong style="color: #fff; font-size: 0.95rem;">Luxury & Comfort</strong>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">Est. ~₹8,500/day</div>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-generate-plan" class="btn btn-primary btn-block btn-lg" style="margin-top: 24px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Smart Itinerary
+          </button>
+        </div>
+
+        <!-- Generated Itinerary Container -->
+        <div id="planner-results-container" class="itinerary-results" style="display: none;">
+          <!-- Populated by window.plannerCtrl -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         8. VIEW: USER PROFILE
+         ================================================================= -->
+    <section id="view-profile" class="view-section" style="display: none; padding: 48px 0 80px;">
+      <div class="container" style="max-width: 900px;">
+        <!-- Profile Banner -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 36px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 20px;">
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="position: relative; cursor: pointer;" onclick="window.app.openEditProfileModal()" title="Click to change profile photo">
+              <img id="profile-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Avatar" style="width: 86px; height: 86px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: var(--shadow-teal);" />
+              <span style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; border: 2px solid var(--bg-card); box-shadow: var(--shadow-sm);"><i class="fa-solid fa-camera"></i></span>
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 id="profile-name" style="font-size: 1.6rem; font-weight: 800; color: #fff;">Arun Kumar</h2>
+                <span id="profile-role" class="badge badge-primary">USER</span>
+              </div>
+              <p id="profile-email" style="color: var(--text-secondary); font-size: 0.92rem;">demo@citymate.com</p>
+              <p id="profile-phone" style="color: var(--text-muted); font-size: 0.85rem;">+91 9845123456</p>
+              <p id="profile-bio" style="color: var(--primary-light); font-size: 0.85rem; margin-top: 4px; display: none;"></p>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary btn-sm" onclick="window.app.openEditProfileModal()">
+              <i class="fa-solid fa-user-pen"></i> Edit Profile
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="window.app.logout()">
+              <i class="fa-solid fa-power-off"></i> Logout
+            </button>
+          </div>
+        </div>
+
+        <!-- Profile Tabs -->
+        <div class="form-row">
+          <div>
+            <h3 style="font-size: 1.2rem; color: #fff; margin-bottom: 16px;">
+              <i class="fa-solid fa-heart" style="color: var(--accent-rose);"></i> Saved Favorites
+            </h3>
+            <div id="profile-favorites-list"></div>
+          </div>
+          <div>
+            <h3 style="font-size: 1.2rem; color: #fff; margin-bottom: 16px;">
+              <i class="fa-solid fa-comment-dots" style="color: var(--primary-light);"></i> Reviews Written
+            </h3>
+            <div id="profile-reviews-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         9. VIEW: ADMIN DASHBOARD
+         ================================================================= -->
+    <section id="view-admin" class="view-section" style="display: none;">
+      <div class="container admin-wrapper">
+        <div class="admin-header">
+          <div>
+            <span class="badge badge-amber" style="margin-bottom: 6px;">Control Center</span>
+            <h2 style="font-size: 2rem; font-weight: 800; color: #fff;">Admin Dashboard</h2>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Manage tourist destinations, categories, emergency services, and registered users.</p>
+          </div>
+          <div>
+            <button id="btn-admin-add-new" class="btn btn-primary">
+              <i class="fa-solid fa-plus"></i> Add Item
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats Metric Cards -->
+        <div id="admin-stats-cards" class="admin-stats-grid">
+          <!-- Populated by window.adminCtrl -->
+        </div>
+
+        <!-- Visual Charts -->
+        <div id="admin-charts-container" class="admin-charts-grid">
+          <!-- Populated by window.adminCtrl -->
+        </div>
+
+        <!-- Admin Table Tabs -->
+        <div class="admin-nav-tabs">
+          <button class="admin-tab-btn active" data-tab="places"><i class="fa-solid fa-mountain-sun"></i> Tourist Places</button>
+          <button class="admin-tab-btn" data-tab="bookings"><i class="fa-solid fa-ticket"></i> Customer Bookings</button>
+          <button class="admin-tab-btn" data-tab="services"><i class="fa-solid fa-bell-concierge"></i> Essential Services</button>
+          <button class="admin-tab-btn" data-tab="users"><i class="fa-solid fa-users"></i> Users</button>
+          <button class="admin-tab-btn" data-tab="reviews"><i class="fa-solid fa-star"></i> Reviews Moderation</button>
+          <button class="admin-tab-btn" data-tab="feedbacks"><i class="fa-solid fa-comments"></i> Traveler Feedback</button>
+        </div>
+
+        <!-- Table Search & Controls -->
+        <div class="admin-table-controls">
+          <div class="table-search-box">
+            <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+            <input type="text" id="admin-table-search" placeholder="Search table entries..." />
+          </div>
+        </div>
+
+        <!-- Dynamic Management Table -->
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr id="admin-table-header-row"></tr>
+            </thead>
+            <tbody id="admin-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         9. VIEW: TRAVELER APP FEEDBACK
+         ================================================================= -->
+    <!-- =================================================================
+         MY BOOKINGS VIEW
+         ================================================================= -->
+    <section id="view-bookings" class="view-section" style="display: none; padding: 48px 0 80px;">
+      <div class="container">
+        <!-- Header -->
+        <div class="section-header" style="margin-bottom: 28px;">
+          <div>
+            <div class="section-tag"><i class="fa-solid fa-calendar-check"></i> Travel Reservations &amp; Passes</div>
+            <h2 class="section-title">My Bookings &amp; Tickets</h2>
+            <p class="section-desc">View, manage, download printable digital tickets, or search your reservation by reference number.</p>
+          </div>
+          <button class="btn btn-primary" onclick="window.app.switchView('tickets')">
+            <i class="fa-solid fa-ticket"></i> Book New Spot Ticket
+          </button>
+        </div>
+
+        <!-- Booking Lookup Tool Card -->
+        <div class="booking-lookup-card" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.12) 0%, rgba(13, 148, 136, 0.1) 100%), var(--bg-card); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: var(--radius-lg); padding: 22px 24px; margin-bottom: 28px; box-shadow: var(--shadow-sm);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(56, 189, 248, 0.2); color: var(--secondary-light); display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <div>
+              <strong style="color: #fff; font-size: 1.05rem;">Find a Specific Booking / E-Ticket</strong>
+              <div style="color: var(--text-muted); font-size: 0.8rem;">Enter your booking reference (e.g. CM-TK-XXXXXX) and your confirmation email</div>
+            </div>
+          </div>
+
+          <form id="bk-lookup-form" onsubmit="window.bookingCtrl.handleLookupSubmit(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 140px; gap: 12px; align-items: flex-end;">
+            <div>
+              <label class="form-label" style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; display: block;">Booking Reference Number *</label>
+              <input type="text" id="bk-lookup-ref" class="form-control" placeholder="e.g. CM-TK-7B93FA" required style="font-family: monospace; letter-spacing: 0.5px; text-transform: uppercase;" />
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; display: block;">Confirmation Email (optional)</label>
+              <input type="email" id="bk-lookup-email" class="form-control" placeholder="e.g. traveler@gmail.com" />
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary btn-block" style="height: 42px; font-weight: 700;">
+                <i class="fa-solid fa-search"></i> Search
+              </button>
+            </div>
+          </form>
+          <div id="bk-lookup-result" style="display: none; margin-top: 16px;"></div>
+        </div>
+
+        <!-- City Filter Chips Bar for My Bookings -->
+        <div id="bookings-city-filter-bar" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:24px; align-items:center;"></div>
+
+        <!-- Booking Cards Container -->
+        <div id="bookings-list-container">
+          <div style="text-align:center;padding:60px 20px;color:var(--text-secondary);">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem;color:var(--primary-light);"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-feedback" class="view-section" style="display: none;">
+
+      <div class="container" style="padding-top: 24px; padding-bottom: 60px;">
+        
+        <!-- Feedback Hero Header -->
+        <div class="feedback-hero-banner">
+          <div class="feedback-hero-content">
+            <div class="hero-badge" style="background: rgba(13, 148, 136, 0.2); color: var(--primary-light); margin-bottom: 12px; display: inline-flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-star-half-stroke"></i> Traveler Voice & Feedback
+            </div>
+            <h1 class="view-title" style="margin-bottom: 10px;">Your Experience Shapes CityMate</h1>
+            <p class="view-subtitle" style="max-width: 650px; margin-bottom: 0;">
+              Tell us about your journey! Whether it's praise, a feature you'd love to see, or suggestions for new tourist destinations, our team reviews every single traveler feedback.
+            </p>
+          </div>
+
+          <!-- Overall Satisfaction Metric Card -->
+          <div class="feedback-stats-hero-card">
+            <div class="fb-stat-big-score">
+              <span id="fb-stat-avg-score" class="fb-score-num">4.8</span>
+              <div class="fb-score-stars">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+              </div>
+              <span id="fb-stat-total-count" class="fb-score-sub">5+ Traveler Reviews</span>
+            </div>
+            <div class="fb-stat-bars-col">
+              <div class="fb-score-pct-row">
+                <span>Traveler Satisfaction</span>
+                <strong id="fb-stat-satisfaction-rate" style="color: var(--primary-light);">98%</strong>
+              </div>
+              <div class="fb-mini-bar-row">
+                <span>5★</span>
+                <div class="fb-mini-track"><div id="fb-bar-5" class="fb-mini-fill" style="width: 80%;"></div></div>
+              </div>
+              <div class="fb-mini-bar-row">
+                <span>4★</span>
+                <div class="fb-mini-track"><div id="fb-bar-4" class="fb-mini-fill" style="width: 20%;"></div></div>
+              </div>
+              <div class="fb-mini-bar-row">
+                <span>3★</span>
+                <div class="fb-mini-track"><div id="fb-bar-3" class="fb-mini-fill" style="width: 0%;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Column Layout: Form on Left/Top & Wall on Right/Bottom -->
+        <div class="feedback-grid-layout">
+          
+          <!-- Column 1: Interactive Feedback Submission Form -->
+          <div class="feedback-form-card">
+            <div class="card-header-styled">
+              <div class="icon-circle" style="background: rgba(13, 148, 136, 0.15); color: var(--primary-light);">
+                <i class="fa-solid fa-pen-fancy"></i>
+              </div>
+              <div>
+                <h3 style="margin: 0; font-size: 1.2rem; color: #fff;">Share Your Feedback</h3>
+                <p style="margin: 0; font-size: 0.82rem; color: var(--text-secondary);">Takes less than 1 minute • Direct to product team</p>
+              </div>
+            </div>
+
+            <form id="app-feedback-form" style="margin-top: 20px;">
+              
+              <!-- Interactive Star Picker -->
+              <div class="form-group" style="text-align: center; margin-bottom: 22px; background: rgba(255,255,255,0.02); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <label class="form-label" style="margin-bottom: 8px; font-weight: 700; color: #fff;">
+                  How was your overall experience with CityMate?
+                </label>
+                <div id="feedback-star-picker" class="rating-stars-interactive">
+                  <button type="button" class="rating-star-btn active" data-value="1" title="1 Star"><i class="fa-solid fa-star"></i></button>
+                  <button type="button" class="rating-star-btn active" data-value="2" title="2 Stars"><i class="fa-solid fa-star"></i></button>
+                  <button type="button" class="rating-star-btn active" data-value="3" title="3 Stars"><i class="fa-solid fa-star"></i></button>
+                  <button type="button" class="rating-star-btn active" data-value="4" title="4 Stars"><i class="fa-solid fa-star"></i></button>
+                  <button type="button" class="rating-star-btn active" data-value="5" title="5 Stars"><i class="fa-solid fa-star"></i></button>
+                </div>
+                <div id="feedback-rating-desc" class="rating-dynamic-label">Exceptional – Outstanding companion app!</div>
+              </div>
+
+              <!-- Category Pills -->
+              <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label">Feedback Category</label>
+                <div class="feedback-category-pills">
+                  <button type="button" class="feedback-cat-pill active" data-cat="General Experience">🌟 General Experience</button>
+                  <button type="button" class="feedback-cat-pill" data-cat="Places & Guides">🗺️ Places & Guides</button>
+                  <button type="button" class="feedback-cat-pill" data-cat="Emergency & Services">🏥 Emergency & Services</button>
+                  <button type="button" class="feedback-cat-pill" data-cat="Trip Planner">📅 Trip Planner</button>
+                  <button type="button" class="feedback-cat-pill" data-cat="Feature Request">💡 Feature Request</button>
+                  <button type="button" class="feedback-cat-pill" data-cat="Bug / Issue">🐛 Report Bug</button>
+                </div>
+              </div>
+
+              <!-- User Name & Email -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="feedback-form-name"><i class="fa-solid fa-user"></i> Your Name *</label>
+                  <input type="text" id="feedback-form-name" class="form-control" required placeholder="e.g. Maya Krishnan" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="feedback-form-email"><i class="fa-solid fa-envelope"></i> Email Address *</label>
+                  <input type="email" id="feedback-form-email" class="form-control" required placeholder="maya@example.com" />
+                </div>
+              </div>
+
+              <!-- Subject / Headline -->
+              <div class="form-group">
+                <label class="form-label" for="feedback-form-subject"><i class="fa-solid fa-heading"></i> Headline / Subject (Optional)</label>
+                <input type="text" id="feedback-form-subject" class="form-control" placeholder="e.g. Exceptional trip planner for our family vacation!" />
+              </div>
+
+              <!-- Feedback Message -->
+              <div class="form-group">
+                <label class="form-label" for="feedback-form-message"><i class="fa-solid fa-message"></i> Your Detailed Feedback *</label>
+                <textarea id="feedback-form-message" class="form-control" rows="4" required placeholder="What did you love? What can we do better? Tell us about your journey..."></textarea>
+              </div>
+
+              <!-- Quick Sentiment / Highlight Chips -->
+              <div class="form-group" style="margin-bottom: 22px;">
+                <label class="form-label" style="font-size: 0.82rem; color: var(--text-secondary);">Quick Highlights (Click to add):</label>
+                <div class="feedback-quick-tags">
+                  <button type="button" class="feedback-tag-chip active" data-tag="⚡ Super Fast">⚡ Super Fast</button>
+                  <button type="button" class="feedback-tag-chip active" data-tag="🎨 Beautiful Design">🎨 Beautiful Design</button>
+                  <button type="button" class="feedback-tag-chip" data-tag="📍 Accurate Directions">📍 Accurate Directions</button>
+                  <button type="button" class="feedback-tag-chip" data-tag="🏥 Emergency Hospital Finder">🏥 Emergency Hospital Finder</button>
+                  <button type="button" class="feedback-tag-chip" data-tag="🌟 Great Recommendations">🌟 Great Recommendations</button>
+                  <button type="button" class="feedback-tag-chip" data-tag="📱 Easy to Use">📱 Easy to Use</button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block btn-lg" style="box-shadow: 0 4px 18px rgba(13, 148, 136, 0.4);">
+                <i class="fa-solid fa-paper-plane"></i> Submit Traveler Feedback
+              </button>
+            </form>
+          </div>
+
+          <!-- Column 2: Traveler Reviews & Feedback Wall -->
+          <div class="feedback-wall-column">
+            <div class="feedback-wall-header">
+              <div>
+                <h3 style="margin: 0 0 4px 0; color: #fff; font-size: 1.35rem; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-comments" style="color: var(--primary-light);"></i>
+                  Traveler Feedback Wall
+                </h3>
+                <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">Authentic comments and ratings from tourists exploring with CityMate</p>
+              </div>
+
+              <!-- Wall Filter Pills -->
+              <div class="feedback-wall-filters">
+                <button type="button" class="fb-wall-filter active" onclick="window.feedbackCtrl.setWallFilter('All', this)">All</button>
+                <button type="button" class="fb-wall-filter" onclick="window.feedbackCtrl.setWallFilter('5stars', this)">5★ Only</button>
+                <button type="button" class="fb-wall-filter" onclick="window.feedbackCtrl.setWallFilter('General Experience', this)">Experience</button>
+                <button type="button" class="fb-wall-filter" onclick="window.feedbackCtrl.setWallFilter('Emergency & Services', this)">Services</button>
+                <button type="button" class="fb-wall-filter" onclick="window.feedbackCtrl.setWallFilter('Feature Request', this)">Ideas</button>
+              </div>
+            </div>
+
+            <!-- Feedback Cards Container -->
+            <div id="feedback-cards-wall" class="feedback-cards-wall-grid">
+              <!-- Dynamically populated by window.feedbackCtrl -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand-logo" style="margin-bottom: 12px;">
+            <div class="brand-icon">
+              <img class="brand-custom-img" src="assets/logo.png" alt="CityMate Logo" />
+            </div>
+            <div class="brand-text">CITY<span>MATE</span></div>
+          </div>
+          <p class="footer-brand-desc">
+            "Explore More. Travel Smarter."<br/>
+            Your intelligent travel companion connecting tourists with places, safety services, authentic local reviews, and automated itineraries.
+          </p>
+          <div class="footer-social-links">
+            <a href="#" class="social-link" title="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="#" class="social-link" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="social-link" title="GitHub"><i class="fa-brands fa-github"></i></a>
+            <a href="#" class="social-link" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="#home" class="footer-link" onclick="window.app.switchView('home')">Home</a></li>
+            <li><a href="#places" class="footer-link" onclick="window.app.switchView('places')">Tourist Places</a></li>
+            <li><a href="#services" class="footer-link" onclick="window.app.switchView('services')">Nearby Services</a></li>
+            <li><a href="#map" class="footer-link" onclick="window.app.switchView('map')">Interactive Map</a></li>
+            <li><a href="#planner" class="footer-link" onclick="window.app.switchView('planner')">Smart Trip Planner</a></li>
+            <li><a href="#favorites" class="footer-link" onclick="window.app.switchView('favorites')">Saved Wishlist</a></li>
+            <li><a href="#feedback" class="footer-link" onclick="window.app.switchView('feedback')">Traveler Feedback</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Major Cities</h4>
+          <ul class="footer-links">
+            <li><a href="#" class="footer-link" onclick="window.app.selectCity(1)">Coimbatore</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.selectCity(2)">Chennai</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.selectCity(3)">Ooty Nilgiris</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.selectCity(4)">Madurai</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.selectCity(5)">Salem</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.selectCity(6)">Bengaluru</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Support & Info</h4>
+          <ul class="footer-links">
+            <li><a href="javascript:void(0)" class="footer-link" onclick="window.feedbackCtrl.openQuickFeedbackModal()"><i class="fa-solid fa-comment-dots" style="color: var(--primary-light);"></i> Give App Feedback</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.showToast('CityMate v1.0.0 is operational with SQLite & REST API architecture.', 'info')">About Platform</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.showToast('Customer emergency contact: support@citymate.com', 'info')">Help & Emergency</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.showToast('Your privacy and location coordinates are protected.', 'info')">Privacy Policy</a></li>
+            <li><a href="#" class="footer-link" onclick="window.app.demoLogin('admin')">Admin Sign In</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 CITYMATE Technologies. All rights reserved.</div>
+        <div style="display: flex; gap: 16px;">
+          <span>Designed with <i class="fa-solid fa-heart" style="color: var(--accent-rose);"></i> for Modern Tourism</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= MODALS CONTAINER ================= -->
+
+  <!-- 1. City Selection Modal -->
+  <div id="city-selection-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-location-dot" style="color: var(--primary-light);"></i> Select Your Destination City</h3>
+        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <input type="text" id="city-modal-search" class="form-control" placeholder="Search city name (e.g. Ooty, Chennai, Bengaluru)..." />
+          <button class="btn btn-secondary" onclick="window.app.useCurrentLocation()" title="Detect Nearest City by GPS">
+            <i class="fa-solid fa-crosshairs"></i> GPS
+          </button>
+        </div>
+
+        <div id="city-modal-cards-grid" style="display: flex; flex-direction: column; gap: 12px; max-height: 380px; overflow-y: auto;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Auth Modal (Login & Register) -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Welcome to CityMate</h3>
+        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Auth Tabs -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+          <button id="auth-tab-login" class="tab-btn active" onclick="window.app.switchAuthTab('login')">Sign In</button>
+          <button id="auth-tab-register" class="tab-btn" onclick="window.app.switchAuthTab('register')">Register Account</button>
+        </div>
+
+        <!-- Quick 1-Click Demo Buttons -->
+        <div style="background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 0.82rem; color: var(--text-secondary);">Quick Test Accounts:</span>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" onclick="window.app.demoLogin('user')">
+              <i class="fa-solid fa-user"></i> Demo Traveler
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="window.app.demoLogin('admin')">
+              <i class="fa-solid fa-shield-halved"></i> Admin Portal
+            </button>
+          </div>
+        </div>
+
+        <!-- Pane: Login -->
+        <div id="auth-login-pane">
+          <form id="auth-login-form">
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="login-email" class="form-control" required placeholder="demo@citymate.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="login-password" class="form-control" required placeholder="demo123" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 10px;">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to CityMate
+            </button>
+          </form>
+        </div>
+
+        <!-- Pane: Register -->
+        <div id="auth-register-pane" style="display: none;">
+          <form id="auth-register-form">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="reg-fullname" class="form-control" required placeholder="e.g. John Doe" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="reg-email" class="form-control" required placeholder="john@example.com" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="reg-phone" class="form-control" placeholder="+91 98765 43210" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="reg-password" class="form-control" required minlength="6" placeholder="Min 6 characters" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <input type="password" id="reg-confirm-password" class="form-control" required minlength="6" placeholder="Re-type password" />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 10px;">
+              <i class="fa-solid fa-user-plus"></i> Create Account
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Place Details Modal -->
+  <div id="place-details-modal" class="modal-overlay">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Destination Details</h3>
+        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="place-details-content" class="modal-body">
+        <!-- Dynamically populated by placesCtrl -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Write Review Modal -->
+  <div id="write-review-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-pen-to-square" style="color: var(--primary-light);"></i> Share Your Experience</h3>
+        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="submit-review-form">
+          <input type="hidden" id="review-place-id" />
+          <div class="form-group" style="text-align: center;">
+            <label class="form-label">Your Rating</label>
+            <div id="interactive-stars-box" class="interactive-stars" style="justify-content: center;">
+              <i class="fa-solid fa-star active" onclick="window.placesCtrl.updateInteractiveStars(1)"></i>
+              <i class="fa-solid fa-star active" onclick="window.placesCtrl.updateInteractiveStars(2)"></i>
+              <i class="fa-solid fa-star active" onclick="window.placesCtrl.updateInteractiveStars(3)"></i>
+              <i class="fa-solid fa-star active" onclick="window.placesCtrl.updateInteractiveStars(4)"></i>
+              <i class="fa-solid fa-star active" onclick="window.placesCtrl.updateInteractiveStars(5)"></i>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Your Review & Tips for Other Travelers</label>
+            <textarea id="review-comment" class="form-control" required rows="4" placeholder="Describe scenic spots, ideal visit hours, ticket tips, or local secrets..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
+            <i class="fa-solid fa-paper-plane"></i> Publish Review
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Edit Profile Modal -->
+  <div id="edit-profile-modal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-user-pen" style="color: var(--primary-light); margin-right: 8px;"></i> Edit Profile Information</h3>
+        <button class="modal-close" onclick="window.app.closeEditProfileModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <form id="edit-profile-form">
+          <!-- Avatar Preview & Quick Presets -->
+          <div style="text-align: center; margin-bottom: 22px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px;">
+            <div style="position: relative; display: inline-block; margin-bottom: 12px;">
+              <img id="edit-profile-avatar-preview" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Avatar Preview" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: var(--shadow-teal);" />
+              <label for="edit-profile-file-input" style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: #fff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--bg-surface); box-shadow: var(--shadow-sm); transition: var(--transition-fast);" title="Upload your own picture">
+                <i class="fa-solid fa-camera" style="font-size: 0.8rem;"></i>
+              </label>
+              <input type="file" id="edit-profile-file-input" accept="image/*" style="display: none;" onchange="window.app.handleAvatarFileUpload(event)" />
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('edit-profile-file-input').click()" style="font-size: 0.8rem; padding: 5px 12px;">
+                <i class="fa-solid fa-upload"></i> Upload Photo
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.app.toggleCustomAvatarUrl()" style="font-size: 0.8rem; padding: 5px 12px;">
+                <i class="fa-solid fa-link"></i> Image URL
+              </button>
+            </div>
+
+            <!-- Custom URL Input (hidden by default) -->
+            <div id="custom-avatar-url-box" style="display: none; margin-bottom: 12px;">
+              <input type="url" id="edit-profile-pic-url-input" class="form-control form-control-sm" placeholder="Paste image URL here..." oninput="window.app.handleCustomAvatarUrlInput(event)" />
+            </div>
+
+            <!-- Quick Presets -->
+            <div>
+              <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Or Pick a Preset Avatar</span>
+              <div id="avatar-presets-grid" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="avatar-preset-btn" onclick="window.app.selectAvatarPreset('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', this)" title="Male Explorer">
+                  <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Avatar 1" />
+                </button>
+                <button type="button" class="avatar-preset-btn" onclick="window.app.selectAvatarPreset('https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150', this)" title="Tech Traveler">
+                  <img src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150" alt="Avatar 2" />
+                </button>
+                <button type="button" class="avatar-preset-btn" onclick="window.app.selectAvatarPreset('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', this)" title="Cool Guy">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" alt="Avatar 3" />
+                </button>
+                <button type="button" class="avatar-preset-btn" onclick="window.app.selectAvatarPreset('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', this)" title="Adventurer">
+                  <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150" alt="Avatar 4" />
+                </button>
+                <button type="button" class="avatar-preset-btn" onclick="window.app.selectAvatarPreset('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', this)" title="Female Traveler">
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150" alt="Avatar 5" />
+                </button>
+                <button type="button" class="avatar-preset-btn" onclick="window.app.selectAvatarPreset('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', this)" title="Classic Portrait">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Avatar 6" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-profile-name"><i class="fa-solid fa-signature"></i> Full Name</label>
+            <input type="text" id="edit-profile-name" class="form-control" required placeholder="e.g. Deepak Shanmugam" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit-profile-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+              <input type="email" id="edit-profile-email" class="form-control" placeholder="yourname@gmail.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-profile-phone"><i class="fa-solid fa-phone"></i> Phone Number</label>
+              <input type="tel" id="edit-profile-phone" class="form-control" placeholder="+91 98765 43210" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-profile-bio"><i class="fa-solid fa-compass"></i> Traveler Bio / Interests</label>
+            <input type="text" id="edit-profile-bio" class="form-control" placeholder="e.g. Nature Explorer, Photography, Solo Traveler" />
+          </div>
+
+          <input type="hidden" id="edit-profile-pic" />
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="button" class="btn btn-secondary btn-block" onclick="window.app.closeEditProfileModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Admin Add/Edit Place Modal -->
+  <div id="admin-edit-place-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Manage Tourist Place</h3>
+        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="admin-place-form">
+          <input type="hidden" id="admin-place-id" />
+          <div class="form-group">
+            <label class="form-label">Place Name</label>
+            <input type="text" id="admin-place-name" class="form-control" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <select id="admin-place-city" class="form-control">
+                <option value="1">Coimbatore</option>
+                <option value="2">Chennai</option>
+                <option value="3">Ooty</option>
+                <option value="4">Madurai</option>
+                <option value="5">Salem</option>
+                <option value="6">Bengaluru</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="admin-place-cat" class="form-control">
+                <option value="1">Nature</option>
+                <option value="2">Historical</option>
+                <option value="3">Adventure</option>
+                <option value="4">Beach</option>
+                <option value="5">Temple</option>
+                <option value="6">Museum</option>
+                <option value="7">Shopping</option>
+                <option value="8">Entertainment</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="admin-place-desc" class="form-control" rows="3" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address / Landmark</label>
+            <input type="text" id="admin-place-addr" class="form-control" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Entry Fee (₹, 0 for Free)</label>
+              <input type="number" id="admin-place-fee" class="form-control" min="0" value="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Opening Hours</label>
+              <input type="text" id="admin-place-hours" class="form-control" value="9:00 AM - 6:00 PM" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cover Image URL</label>
+            <input type="url" id="admin-place-img" class="form-control" value="https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Save Destination</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Admin Add/Edit Service Modal -->
+  <div id="admin-edit-service-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Manage Essential Service</h3>
+        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="admin-service-form">
+          <input type="hidden" id="admin-srv-id" />
+          <div class="form-group">
+            <label class="form-label">Service / Establishment Name</label>
+            <input type="text" id="admin-srv-name" class="form-control" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Service Type</label>
+              <select id="admin-srv-type" class="form-control">
+                <option value="hotel">Hotel & Accommodation</option>
+                <option value="restaurant">Restaurant & Dining</option>
+                <option value="hospital">Hospital & Emergency</option>
+                <option value="atm">ATM & Banking</option>
+                <option value="petrol_bunk">Petrol Bunk / Fuel</option>
+                <option value="restroom">Public Restroom</option>
+                <option value="market">Market & Bazaar</option>
+                <option value="rental">Rental Service / Cab</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <select id="admin-srv-city" class="form-control">
+                <option value="1">Coimbatore</option>
+                <option value="2">Chennai</option>
+                <option value="3">Ooty</option>
+                <option value="4">Madurai</option>
+                <option value="5">Salem</option>
+                <option value="6">Bengaluru</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input type="text" id="admin-srv-addr" class="form-control" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="text" id="admin-srv-phone" class="form-control" value="+91 98400 12345" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Opening Status</label>
+              <input type="text" id="admin-srv-status" class="form-control" value="Open Now" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Save Service</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Menu -->
+  <div id="mobile-drawer-overlay" class="mobile-drawer-overlay">
+    <div class="mobile-drawer">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div class="brand-logo" style="font-size: 1.15rem;">
+          <div class="brand-icon" style="width: 36px; height: 36px;">
+            <img class="brand-custom-img" src="assets/logo.png" alt="CityMate Logo" />
+          </div>
+          <div class="brand-text">CITY<span>MATE</span></div>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('mobile-drawer-overlay').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
+        <li><a href="#home" class="nav-link" data-view="home"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="#places" class="nav-link" data-view="places"><i class="fa-solid fa-mountain-sun"></i> Explore Destinations</a></li>
+        <li><a href="#map" class="nav-link" data-view="map"><i class="fa-solid fa-map-location-dot"></i> Interactive Map</a></li>
+        <li><a href="#tickets" class="nav-link" data-view="tickets" style="color: var(--secondary-light); font-weight: 700;"><i class="fa-solid fa-ticket"></i> Book Tickets</a></li>
+        <li><a href="#bookings" class="nav-link" data-view="bookings"><i class="fa-solid fa-calendar-check"></i> My Bookings</a></li>
+        <li><a href="javascript:void(0)" class="nav-link" onclick="window.app.openAboutModal()"><i class="fa-solid fa-circle-info"></i> About Us</a></li>
+        <li><a href="javascript:void(0)" class="nav-link" onclick="window.app.openContactModal()"><i class="fa-solid fa-headset"></i> Contact Us</a></li>
+        <li><a href="#recommendations" class="nav-link" data-view="recommendations"><i class="fa-solid fa-wand-magic-sparkles"></i> Recommendations</a></li>
+        <li><a href="#services" class="nav-link" data-view="services"><i class="fa-solid fa-bell-concierge"></i> Services</a></li>
+        <li><a href="#planner" class="nav-link" data-view="planner"><i class="fa-solid fa-route"></i> Trip Planner</a></li>
+        <li><a href="#feedback" class="nav-link" data-view="feedback"><i class="fa-solid fa-comment-dots"></i> Traveler Feedback</a></li>
+        <li><a href="#profile" class="nav-link" data-view="profile"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li id="mobile-admin-link" style="display: none;"><a href="#admin" class="nav-link" data-view="admin" style="color: var(--accent-amber);"><i class="fa-solid fa-shield-halved"></i> Admin Dashboard</a></li>
+        <li>
+          <a href="javascript:void(0)" id="mobile-theme-toggle-btn" class="nav-link" onclick="window.app.toggleTheme()" title="Switch theme" aria-label="Switch theme">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+            <span class="theme-text-label">Switch Theme</span>
+          </a>
+        </li>
+      </ul>
+
+      <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+        <button class="btn btn-outline btn-block btn-sm" onclick="window.app.openCityModal()">
+          <i class="fa-solid fa-city"></i> Switch City
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Add Hospital Details Modal -->
+  <div id="add-hospital-modal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 540px;">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border-subtle);">
+        <h3 class="modal-title" style="color: #fff; display: flex; align-items: center; gap: 10px;">
+          <span style="width: 34px; height: 34px; border-radius: 8px; background: rgba(239, 68, 68, 0.18); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 1.05rem;">
+            <i class="fa-solid fa-hospital"></i>
+          </span>
+          Add Hospital &amp; Emergency Details
+        </h3>
+        <button class="modal-close" onclick="window.app.closeAddHospitalModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <form id="add-hospital-form" onsubmit="window.app.handleAddHospitalSubmit(event)">
+          <div class="form-group">
+            <label class="form-label" for="hosp-name"><i class="fa-solid fa-hospital" style="color: #ef4444;"></i> Hospital / Medical Center Name</label>
+            <input type="text" id="hosp-name" class="form-control" required placeholder="e.g. KMCH Super Specialty Hospital" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="hosp-city"><i class="fa-solid fa-city"></i> City</label>
+              <select id="hosp-city" class="form-control">
+                <option value="1">Coimbatore</option>
+                <option value="2">Chennai</option>
+                <option value="3">Ooty</option>
+                <option value="4">Madurai</option>
+                <option value="5">Salem</option>
+                <option value="6">Bengaluru</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="hosp-phone"><i class="fa-solid fa-phone" style="color: #ef4444;"></i> Emergency 24/7 Phone</label>
+              <input type="text" id="hosp-phone" class="form-control" required placeholder="+91 422 432 3800 or 108" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="hosp-address"><i class="fa-solid fa-location-dot"></i> Complete Address / Landmark</label>
+            <input type="text" id="hosp-address" class="form-control" required placeholder="e.g. Avinashi Road, Civil Aerodrome Post, Peelamedu" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="hosp-status"><i class="fa-solid fa-clock"></i> Emergency Status</label>
+              <select id="hosp-status" class="form-control">
+                <option value="24x7 Emergency & Trauma">24x7 Emergency &amp; Trauma Care</option>
+                <option value="Open 24 Hours">Open 24 Hours</option>
+                <option value="Open Now (8 AM - 10 PM)">Open Now (8 AM - 10 PM)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="hosp-rating"><i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> Rating (1-5)</label>
+              <input type="number" id="hosp-rating" class="form-control" min="1" max="5" step="0.1" value="4.8" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="hosp-distance"><i class="fa-solid fa-route"></i> Distance (km from center)</label>
+              <input type="number" id="hosp-distance" class="form-control" min="0.1" step="0.1" value="1.5" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="hosp-price"><i class="fa-solid fa-tag"></i> Facility Tier</label>
+              <select id="hosp-price" class="form-control">
+                <option value="$$$">Super Specialty / Tertiary Care ($$$)</option>
+                <option value="$$">Multi-Specialty / General Hospital ($$)</option>
+                <option value="$">Government / Free Community Care ($)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="hosp-image"><i class="fa-solid fa-image"></i> Photo URL</label>
+            <input type="url" id="hosp-image" class="form-control" placeholder="https://..." value="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500" />
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="button" class="btn btn-secondary btn-block" onclick="window.app.closeAddHospitalModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-block" style="background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #ef4444; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);">
+              <i class="fa-solid fa-plus-circle"></i> Save Hospital Details
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  <!-- ================= Custom Logo Upload Modal ================= -->
+  <div id="logo-upload-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; background: rgba(0, 210, 180, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--primary-light);">
+            <i class="fa-solid fa-camera"></i>
+          </div>
+          <div>
+            <h3 class="modal-title">Customize Brand Logo</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Upload your custom logo or update the brand name</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="window.app.closeLogoUploadModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 24px;">
+        <!-- Live Logo Preview Box -->
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px;">Current Live Preview</div>
+          <div style="display: inline-flex; align-items: center; gap: 12px; background: var(--bg-surface); padding: 12px 24px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+            <div id="modal-logo-preview-icon" class="brand-icon" style="width: 48px; height: 48px;">
+              <img id="modal-preview-img" class="brand-custom-img" style="display: none;" alt="Preview" />
+              <i id="modal-preview-default-icon" class="fa-solid fa-compass brand-default-icon" style="font-size: 1.4rem;"></i>
+            </div>
+            <div id="modal-brand-text-preview" class="brand-text" style="font-size: 1.4rem; font-weight: 800;">
+              CITY<span>MATE</span>
+            </div>
+          </div>
+        </div>
+
+        <form id="logo-upload-form" onsubmit="window.app.handleLogoSubmit(event)">
+          <!-- File Upload Option -->
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label" style="display: flex; justify-content: space-between;">
+              <span><i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary-light);"></i> Upload Logo File from Device</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">PNG, SVG, JPG, WebP</span>
+            </label>
+            <div style="border: 2px dashed var(--border-subtle); border-radius: var(--radius-md); padding: 22px 16px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.02);" onclick="document.getElementById('logo-file-input').click();">
+              <input type="file" id="logo-file-input" accept="image/*" style="display: none;" onchange="window.app.handleLogoFileSelect(event)" />
+              <i class="fa-solid fa-file-image" style="font-size: 2.2rem; color: var(--primary-light); margin-bottom: 8px;"></i>
+              <div style="font-weight: 600; font-size: 0.95rem; color: #fff;">Click to Browse or Choose File</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Square ratio recommended • Instant live preview</div>
+            </div>
+          </div>
+
+          <!-- URL / Path Option -->
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label" for="logo-url-input">
+              <i class="fa-solid fa-link" style="color: var(--primary-light);"></i> Or Paste Logo URL / File Path
+            </label>
+            <input type="text" id="logo-url-input" class="form-control" placeholder="assets/logo.png or https://example.com/logo.png" oninput="window.app.previewLogoUrl(this.value)" />
+          </div>
+
+          <!-- Custom Brand Name Option -->
+          <div class="form-group" style="margin-bottom: 22px;">
+            <label class="form-label" for="brand-name-input">
+              <i class="fa-solid fa-font" style="color: var(--primary-light);"></i> Brand Name <span style="font-weight: normal; color: var(--text-muted);">(Optional)</span>
+            </label>
+            <input type="text" id="brand-name-input" class="form-control" placeholder="CITYMATE" oninput="window.app.previewBrandName(this.value)" />
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <button type="button" class="btn btn-secondary" onclick="window.app.resetToDefaultLogo()" style="flex: 1;" title="Reset to original CityMate logo">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+            <button type="submit" class="btn btn-primary" style="flex: 2;">
+              <i class="fa-solid fa-check"></i> Save Logo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Quick Feedback Floating Modal ================= -->
+  <div id="quick-feedback-modal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border-subtle);">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 10px; color: #fff;">
+          <span style="width: 36px; height: 36px; border-radius: 8px; background: rgba(13, 148, 136, 0.18); color: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <i class="fa-solid fa-comment-dots"></i>
+          </span>
+          Quick Traveler Feedback
+        </h3>
+        <button class="modal-close" onclick="window.feedbackCtrl.closeQuickFeedbackModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <form id="modal-quick-feedback-form">
+          <div class="form-group" style="text-align: center; margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <label class="form-label" style="margin-bottom: 8px; font-weight: 600; color: #fff;">Rate your experience with CityMate</label>
+            <div id="modal-feedback-star-picker" class="rating-stars-interactive">
+              <button type="button" class="rating-star-btn active" data-value="1" title="1 Star"><i class="fa-solid fa-star"></i></button>
+              <button type="button" class="rating-star-btn active" data-value="2" title="2 Stars"><i class="fa-solid fa-star"></i></button>
+              <button type="button" class="rating-star-btn active" data-value="3" title="3 Stars"><i class="fa-solid fa-star"></i></button>
+              <button type="button" class="rating-star-btn active" data-value="4" title="4 Stars"><i class="fa-solid fa-star"></i></button>
+              <button type="button" class="rating-star-btn active" data-value="5" title="5 Stars"><i class="fa-solid fa-star"></i></button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="modal-fb-name"><i class="fa-solid fa-user"></i> Your Name</label>
+              <input type="text" id="modal-fb-name" class="form-control" required placeholder="John Doe" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="modal-fb-email"><i class="fa-solid fa-envelope"></i> Your Email</label>
+              <input type="email" id="modal-fb-email" class="form-control" required placeholder="john@example.com" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-fb-category"><i class="fa-solid fa-tags"></i> Category</label>
+            <select id="modal-fb-category" class="form-control">
+              <option value="General Experience">🌟 General Experience</option>
+              <option value="Places & Guides">🗺️ Places & Guides</option>
+              <option value="Emergency & Services">🏥 Emergency & Services</option>
+              <option value="Trip Planner">📅 Trip Planner</option>
+              <option value="Feature Request">💡 Feature Request</option>
+              <option value="Bug / Issue">🐛 Report Bug</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modal-fb-message"><i class="fa-solid fa-message"></i> Message / Suggestion</label>
+            <textarea id="modal-fb-message" class="form-control" rows="3" required placeholder="Share your suggestions, feature requests, or questions..."></textarea>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button type="button" class="btn btn-secondary btn-block" onclick="window.feedbackCtrl.closeQuickFeedbackModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fa-solid fa-paper-plane"></i> Submit Feedback
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Booking Modal ================= -->
+  <!-- ================= Booking Modal ================= -->
+  <div id="booking-modal" class="modal-overlay">
+    <div class="modal-dialog modal-card" style="max-width:640px; width:100%; max-height:90vh; overflow-y:auto; background:var(--bg-surface);">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:38px;height:38px;background:rgba(2,132,199,0.18);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--secondary-light);font-size:1.15rem;">
+            <i class="fa-solid fa-ticket"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" style="margin:0;font-size:1.25rem;color:#fff;">Online Ticket Booking</h3>
+            <p id="bk-place-name-display" style="font-size:0.82rem;color:var(--text-secondary);margin:0;">Select destination and enter visitor details</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="window.bookingCtrl.closeBookingModal()" aria-label="Close booking modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Destination Quick Banner & Price Summary -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:linear-gradient(90deg, rgba(2,132,199,0.1) 0%, rgba(16,185,129,0.08) 100%);border-bottom:1px solid var(--border-subtle);flex-wrap:wrap;gap:8px;">
+        <span style="font-size:0.85rem;color:var(--accent-emerald);font-weight:700;"><i class="fa-solid fa-tag"></i> <span id="bk-fee-display">Base Entry: Free</span></span>
+        <span style="font-size:0.82rem;color:var(--text-secondary);"><i class="fa-regular fa-clock"></i> <span id="bk-hours-display">Open Daily</span></span>
+      </div>
+
+      <div class="modal-body" style="padding:24px;">
+        <!-- Booking Form Section -->
+        <div id="booking-form-section">
+          <form id="booking-form" onsubmit="window.bookingCtrl.submitBooking(event)">
+            
+            <!-- 1. Destination Selector -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label" for="bk-destination-select">
+                <i class="fa-solid fa-map-location-dot" style="color:var(--secondary-light);"></i> 1. Select Tourist Destination *
+              </label>
+              <select id="bk-destination-select" class="form-control" onchange="window.bookingCtrl.onDestinationSelectChange(this.value)" style="font-weight: 600; font-size: 0.95rem;">
+                <!-- Populated dynamically with all places across all 12 cities -->
+              </select>
+            </div>
+
+            <!-- 2. Visit Date -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label" for="bk-visit-date"><i class="fa-solid fa-calendar-day"></i> 2. Select Visit Date *</label>
+              <input type="date" id="bk-visit-date" class="form-control" required style="font-weight: 600;" />
+            </div>
+
+            <!-- 3. Interactive Time Slot Selection -->
+            <div class="form-group" style="margin-bottom: 18px;">
+              <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fa-regular fa-clock"></i> 3. Select Entry Time Slot *</span>
+                <span id="bk-selected-slot-label" style="font-size:0.78rem; color:var(--secondary-light); font-weight:700;">09:00 AM – 11:00 AM</span>
+              </label>
+              <input type="hidden" id="bk-visit-time" value="09:00 AM – 11:00 AM (Morning Slot 1)" />
+              <div class="bk-slots-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(115px, 1fr)); gap:8px;">
+                <button type="button" class="bk-slot-pill active" onclick="window.bookingCtrl.selectSlot('09:00 AM – 11:00 AM (Morning Slot 1)', this)" style="padding:8px 6px; border-radius:8px; border:1px solid rgba(56,189,248,0.5); background:rgba(2,132,199,0.18); color:#fff; cursor:pointer; text-align:center; font-size:0.78rem; font-weight:600; transition:all 0.2s;">
+                  <div style="font-size:1rem; margin-bottom:2px;">🌅</div>
+                  <div>09:00 – 11:00 AM</div>
+                  <small style="color:var(--text-muted); font-size:0.68rem;">Morning</small>
+                </button>
+                <button type="button" class="bk-slot-pill" onclick="window.bookingCtrl.selectSlot('11:00 AM – 01:00 PM (Morning Slot 2)', this)" style="padding:8px 6px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-card); color:var(--text-secondary); cursor:pointer; text-align:center; font-size:0.78rem; font-weight:600; transition:all 0.2s;">
+                  <div style="font-size:1rem; margin-bottom:2px;">☀️</div>
+                  <div>11:00 – 01:00 PM</div>
+                  <small style="color:var(--text-muted); font-size:0.68rem;">Peak</small>
+                </button>
+                <button type="button" class="bk-slot-pill" onclick="window.bookingCtrl.selectSlot('02:00 PM – 04:00 PM (Afternoon Slot)', this)" style="padding:8px 6px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-card); color:var(--text-secondary); cursor:pointer; text-align:center; font-size:0.78rem; font-weight:600; transition:all 0.2s;">
+                  <div style="font-size:1rem; margin-bottom:2px;">🌤️</div>
+                  <div>02:00 – 04:00 PM</div>
+                  <small style="color:var(--text-muted); font-size:0.68rem;">Afternoon</small>
+                </button>
+                <button type="button" class="bk-slot-pill" onclick="window.bookingCtrl.selectSlot('04:00 PM – 06:30 PM (Evening Sunset Slot)', this)" style="padding:8px 6px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-card); color:var(--text-secondary); cursor:pointer; text-align:center; font-size:0.78rem; font-weight:600; transition:all 0.2s;">
+                  <div style="font-size:1rem; margin-bottom:2px;">🌇</div>
+                  <div>04:00 – 06:30 PM</div>
+                  <small style="color:var(--text-muted); font-size:0.68rem;">Sunset</small>
+                </button>
+                <button type="button" class="bk-slot-pill" onclick="window.bookingCtrl.selectSlot('06:30 PM – 08:30 PM (Night / Aarti Slot)', this)" style="padding:8px 6px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-card); color:var(--text-secondary); cursor:pointer; text-align:center; font-size:0.78rem; font-weight:600; transition:all 0.2s;">
+                  <div style="font-size:1rem; margin-bottom:2px;">🌙</div>
+                  <div>06:30 – 08:30 PM</div>
+                  <small style="color:var(--text-muted); font-size:0.68rem;">Evening</small>
+                </button>
+              </div>
+            </div>
+
+            <!-- 4. Ticket Counters (Adults, Children, Senior Citizens) -->
+            <div class="form-row" style="margin-bottom: 16px;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label" for="bk-adults" style="font-size:0.82rem;">
+                  <i class="fa-solid fa-person"></i> Adults (12+ yrs) *
+                </label>
+                <input type="number" id="bk-adults" class="form-control" min="1" max="25" value="1" oninput="window.bookingCtrl.recalcTotal()" required />
+                <span style="font-size:0.72rem; color:var(--text-muted); display:block; margin-top:2px;">Full ticket rate</span>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label" for="bk-children" style="font-size:0.82rem;">
+                  <i class="fa-solid fa-child"></i> Children (3–11 yrs)
+                </label>
+                <input type="number" id="bk-children" class="form-control" min="0" max="25" value="0" oninput="window.bookingCtrl.recalcTotal()" />
+                <span style="font-size:0.72rem; color:var(--secondary-light); display:block; margin-top:2px;">50% concession</span>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label" for="bk-seniors" style="font-size:0.82rem;">
+                  <i class="fa-solid fa-person-cane"></i> Seniors (60+ yrs)
+                </label>
+                <input type="number" id="bk-seniors" class="form-control" min="0" max="25" value="0" oninput="window.bookingCtrl.recalcTotal()" />
+                <span style="font-size:0.72rem; color:var(--accent-emerald); display:block; margin-top:2px;">40% concession</span>
+              </div>
+            </div>
+
+            <!-- 5. Automatic Price Calculation Breakdown Card -->
+            <div class="bk-price-breakdown-card" style="background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 14px 18px; margin-bottom: 18px;">
+              <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--secondary-light); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa-solid fa-receipt"></i> Live Price Breakdown</span>
+                <span id="bk-base-rate-badge" style="background: rgba(56, 189, 248, 0.15); padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; color:#fff;">Rate: ₹0 / person</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
+                  <span>Adult Tickets (<span id="bk-adult-count-label">1</span> &times; <span id="bk-adult-rate-label">₹0</span>)</span>
+                  <strong id="bk-adult-subtotal" style="color: #fff;">₹0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
+                  <span>Child Tickets (<span id="bk-child-count-label">0</span> &times; <span id="bk-child-rate-label">₹0</span>)</span>
+                  <strong id="bk-child-subtotal" style="color: #fff;">₹0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
+                  <span>Senior Citizen Tickets (<span id="bk-senior-count-label">0</span> &times; <span id="bk-senior-rate-label">₹0</span>)</span>
+                  <strong id="bk-senior-subtotal" style="color: #fff;">₹0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: var(--text-secondary); border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                  <span>Applicable Taxes &amp; Booking Fee (5% GST)</span>
+                  <strong id="bk-tax-subtotal" style="color: var(--accent-amber);">₹0.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(56, 189, 248, 0.3); padding-top: 8px; margin-top: 4px;">
+                  <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">Final Booking Amount</span>
+                  <span id="bk-total-display" style="font-size: 1.35rem; font-weight: 800; color: var(--accent-emerald);">Free</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. Essential Needs & Amenities -->
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label" style="font-size:0.84rem;"><i class="fa-solid fa-list-check"></i> Special Tour Needs &amp; Amenities</label>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-secondary); cursor:pointer;">
+                  <input type="checkbox" class="bk-need-checkbox" value="🚗 Reserved Parking" />
+                  <span>🚗 Reserved Parking</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-secondary); cursor:pointer;">
+                  <input type="checkbox" class="bk-need-checkbox" value="♿ Wheelchair Assistance" />
+                  <span>♿ Wheelchair Access</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-secondary); cursor:pointer;">
+                  <input type="checkbox" class="bk-need-checkbox" value="🎙️ Local Certified Tour Guide" />
+                  <span>🎙️ Certified Guide</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-secondary); cursor:pointer;">
+                  <input type="checkbox" class="bk-need-checkbox" value="📸 Camera / Photography Pass" />
+                  <span>📸 Camera Permit</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-secondary); cursor:pointer;">
+                  <input type="checkbox" class="bk-need-checkbox" value="🎧 Audio Guide Device" />
+                  <span>🎧 Audio Headset</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 7. Visitor Contact Information -->
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="bk-visitor-name"><i class="fa-solid fa-user"></i> Primary Visitor Full Name *</label>
+                <input type="text" id="bk-visitor-name" class="form-control" placeholder="e.g. Anand Kumar" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="bk-visitor-email"><i class="fa-solid fa-envelope"></i> Confirmation Email Address *</label>
+                <input type="email" id="bk-visitor-email" class="form-control" placeholder="e.g. anand@gmail.com" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bk-visitor-phone"><i class="fa-solid fa-phone"></i> Mobile Phone Number <span style="font-weight:400;color:var(--text-muted);">(for instant SMS &amp; digital pass)</span> *</label>
+              <input type="tel" id="bk-visitor-phone" class="form-control" placeholder="+91 9876543210" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bk-special"><i class="fa-solid fa-note-sticky"></i> Special Requirements / Notes <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
+              <textarea id="bk-special" class="form-control" rows="2" placeholder="e.g. Senior citizen assistance, preferred language for guide, medical notes"></textarea>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:20px;">
+              <button type="button" class="btn btn-secondary btn-block" onclick="window.bookingCtrl.closeBookingModal()">Cancel</button>
+              <button type="submit" id="bk-submit-btn" class="btn btn-primary btn-block" style="font-size:1.02rem; font-weight:800; background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%); border:none; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+                <i class="fa-solid fa-calendar-check"></i> Confirm Booking &amp; Generate E-Ticket
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Confirmation Section (shown after booking) -->
+        <div id="booking-confirm-section" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= About Us Modal ================= -->
+  <div id="about-modal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 580px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(2,132,199,0.2) 0%, rgba(13,148,136,0.15) 100%);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(56,189,248,0.2); color: var(--secondary-light); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <i class="fa-solid fa-compass"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" style="margin: 0; color: #fff;">About CityMate Tourism</h3>
+            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Your Smart Gateway to Southern India's Finest Spots</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('about-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <p style="color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem;">
+          <strong>CityMate</strong> is a modern tourism discovery and smart online ticket booking platform built to provide travelers with seamless, verified exploration across <strong>12 premier destination cities</strong> in Tamil Nadu, Karnataka, and Kerala.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px;">
+            <div style="color: var(--secondary-light); font-size: 1.2rem; margin-bottom: 6px;"><i class="fa-solid fa-qrcode"></i></div>
+            <strong style="color: #fff; font-size: 0.9rem; display: block;">Instant QR E-Tickets</strong>
+            <span style="color: var(--text-muted); font-size: 0.78rem;">Scannable digital entry passes delivered immediately.</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px;">
+            <div style="color: var(--accent-emerald); font-size: 1.2rem; margin-bottom: 6px;"><i class="fa-solid fa-users"></i></div>
+            <strong style="color: #fff; font-size: 0.9rem; display: block;">Transparent Pricing</strong>
+            <span style="color: var(--text-muted); font-size: 0.78rem;">Concessions for children (50%) and senior citizens (40%).</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px;">
+            <div style="color: var(--accent-amber); font-size: 1.2rem; margin-bottom: 6px;"><i class="fa-solid fa-map-location-dot"></i></div>
+            <strong style="color: #fff; font-size: 0.9rem; display: block;">12 Cities Network</strong>
+            <span style="color: var(--text-muted); font-size: 0.78rem;">Coimbatore, Chennai, Ooty, Madurai, Bengaluru &amp; more.</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px;">
+            <div style="color: var(--accent-rose); font-size: 1.2rem; margin-bottom: 6px;"><i class="fa-solid fa-shield-heart"></i></div>
+            <strong style="color: #fff; font-size: 0.9rem; display: block;">Essential Needs</strong>
+            <span style="color: var(--text-muted); font-size: 0.78rem;">Reserved parking, wheelchair access, and tour guides.</span>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 16px; display: flex; justify-content: flex-end;">
+          <button class="btn btn-primary" onclick="document.getElementById('about-modal').classList.remove('active')">Got It</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= Contact Us Modal ================= -->
+  <div id="contact-modal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 540px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(2,132,199,0.2) 0%, rgba(16,185,129,0.15) 100%);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(16,185,129,0.2); color: var(--accent-emerald); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <i class="fa-solid fa-headset"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" style="margin: 0; color: #fff;">Contact Traveler Support</h3>
+            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">We are here to help with your bookings &amp; travels</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('contact-modal').classList.remove('active')">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px;">
+            <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Customer Care Hotline</span>
+            <div style="color: var(--secondary-light); font-weight: 700; font-size: 0.95rem; margin-top: 2px;">+91 1800-425-2489</div>
+            <span style="font-size: 0.72rem; color: var(--text-secondary);">Toll-Free (07:00 AM – 10:00 PM)</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px;">
+            <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Official Support Email</span>
+            <div style="color: var(--accent-emerald); font-weight: 700; font-size: 0.95rem; margin-top: 2px;">support@citymate.com</div>
+            <span style="font-size: 0.72rem; color: var(--text-secondary);">Average response within 1 hour</span>
+          </div>
+        </div>
+
+        <form onsubmit="event.preventDefault(); window.app.showToast('Thank you! Your message has been sent to our traveler desk.', 'success'); document.getElementById('contact-modal').classList.remove('active');">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 0.8rem;">Your Name *</label>
+            <input type="text" class="form-control" placeholder="e.g. Anand Kumar" required />
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 0.8rem;">Your Email *</label>
+            <input type="email" class="form-control" placeholder="e.g. anand@gmail.com" required />
+          </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="font-size: 0.8rem;">How can we assist you? *</label>
+            <textarea class="form-control" rows="3" placeholder="Tell us about your booking query, ticket modification, or destination request..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700;">
+            <i class="fa-solid fa-paper-plane"></i> Send Inquiry
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Feedback Quick Widget Button -->
+  <button id="floating-feedback-fab" class="floating-feedback-fab" onclick="window.feedbackCtrl.openQuickFeedbackModal()" title="Leave App Feedback">
+    <i class="fa-solid fa-comment-dots"></i>
+    <span>Feedback</span>
+  </button>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Supabase JS SDK (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- CityMate Core Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/services.js"></script>
+  <script src="js/places.js"></script>
+  <script src="js/recommendations.js"></script>
+  <script src="js/planner.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/feedback.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/booking.js"></script>
+  <script src="js/script.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

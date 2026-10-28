@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotels, Resorts &amp; Stays – CITYMATE</title>
+  <meta name="description" content="Find and book verified hotels, heritage stays, and luxury resorts with instant room booking and e-vouchers." />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- CityMate Core Styles -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+
+  <style>
+    /* Modal Backdrop and Wrapper */
+    .hotel-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 15, 29, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .hotel-modal-container {
+      width: 100%;
+      max-width: 640px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg), 0 20px 40px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+      animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .hotel-modal-header {
+      position: relative;
+      height: 140px;
+      overflow: hidden;
+    }
+
+    .hotel-modal-header img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hotel-modal-header-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, var(--bg-surface) 0%, rgba(10,15,29,0.7) 100%);
+    }
+
+    .hotel-modal-close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+      z-index: 5;
+    }
+    .hotel-modal-close-btn:hover {
+      background: rgba(239, 68, 68, 0.85);
+    }
+
+    .hotel-modal-body {
+      padding: 24px 28px;
+      max-height: calc(85vh - 140px);
+      overflow-y: auto;
+    }
+
+    /* Price breakdown card */
+    .calc-breakdown-card {
+      background: rgba(2, 132, 199, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .calc-row.total-row {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(255,255,255,0.15);
+      margin-bottom: 0;
+    }
+
+    /* Form groups inside modal */
+    .modal-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 600px) {
+      .modal-grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* Voucher Ticket styling */
+    .voucher-card {
+      background: #0f172a;
+      border: 2px dashed rgba(56, 189, 248, 0.4);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+    }
+    .voucher-barcode {
+      font-family: 'Courier New', monospace;
+      letter-spacing: 4px;
+      background: #fff;
+      color: #000;
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand-logo" title="CityMate - Home">
+        <div class="brand-icon">
+          <img class="brand-custom-img" src="assets/logo.png" alt="CityMate Logo" onerror="this.src='https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=100'" />
+        </div>
+        <div class="brand-text">CITY<span>MATE</span></div>
+      </a>
+
+      <!-- Desktop Menu -->
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+          <li><a href="places.html" class="nav-link"><i class="fa-solid fa-mountain-sun"></i> Places</a></li>
+          <li><a href="hotels.html" class="nav-link active"><i class="fa-solid fa-hotel"></i> Hotels</a></li>
+          <li><a href="restaurants.html" class="nav-link"><i class="fa-solid fa-utensils"></i> Restaurants</a></li>
+          <li><a href="hospitals.html" class="nav-link"><i class="fa-solid fa-hospital"></i> Hospitals</a></li>
+          <li><a href="services.html" class="nav-link"><i class="fa-solid fa-bell-concierge"></i> Services</a></li>
+          <li><a href="map.html" class="nav-link"><i class="fa-solid fa-map-location-dot"></i> Map</a></li>
+        </ul>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle theme">
+          <i class="fa-solid fa-sun icon-sun"></i>
+          <i class="fa-solid fa-moon icon-moon"></i>
+        </button>
+
+        <button class="btn btn-secondary btn-sm" onclick="window.hotelBookingCtrl.openMyBookings()" title="View your hotel reservations">
+          <i class="fa-solid fa-receipt"></i> My Bookings
+          <span id="my-bookings-count" class="badge badge-primary" style="display:none; margin-left: 4px; padding: 2px 7px; font-size: 0.72rem;">0</span>
+        </button>
+
+        <div id="nav-guest-actions" style="display: flex; gap: 8px;">
+          <a href="login.html" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In</a>
+          <a href="register.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-user-plus"></i> Register</a>
+        </div>
+
+        <div id="nav-user-actions" style="display: none; align-items: center; gap: 10px;">
+          <a href="profile.html" class="user-nav-btn" style="text-decoration: none;" title="View Profile">
+            <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
+            <span id="nav-user-name" style="font-weight: 700; font-size: 0.92rem; color: #fff;">Traveler</span>
+          </a>
+          <button class="btn btn-secondary btn-sm" onclick="window.authCtrl.logout()"><i class="fa-solid fa-power-off"></i> Logout</button>
+        </div>
+
+        <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Header Banner -->
+  <div class="page-header-banner">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <span class="badge badge-primary" style="margin-bottom: 10px;">
+            <i class="fa-solid fa-hotel"></i> Hospitality &amp; Accommodations
+          </span>
+          <h1 class="page-header-title">Hotels &amp; Luxury Resorts</h1>
+          <p class="page-header-subtitle">
+            Find comfortable budget stays, heritage colonial villas, and 5-star luxury hotels with verified contact numbers, instant room booking, and e-vouchers.
+          </p>
+        </div>
+        <div style="margin-top: 10px;">
+          <button class="btn btn-primary btn-md" onclick="window.hotelBookingCtrl.openMyBookings()" style="font-weight: 700; box-shadow: 0 4px 14px rgba(2,132,199,0.3);">
+            <i class="fa-solid fa-suitcase"></i> Manage My Bookings
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="container" style="padding-bottom: 80px;">
+
+    <!-- Toolbar: Search, City Filter, Price, Tier, Sort -->
+    <div class="filter-toolbar" style="gap: 12px;">
+      <!-- Search Input -->
+      <div class="filter-search-box">
+        <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+        <input type="text" id="services-search-input" placeholder="Search hotels by name, location or stay tier..." oninput="window.servicesManager.setSearchQuery(this.value)" />
+      </div>
+
+      <!-- City Dropdown -->
+      <div class="filter-group">
+        <select id="services-city-select" class="filter-select" onchange="window.servicesManager.setCityFilter(this.value)">
+          <option value="all">All Cities &amp; Regions</option>
+        </select>
+      </div>
+
+      <!-- Price Range Filter -->
+      <div class="filter-group">
+        <select id="hotel-price-filter" class="filter-select" onchange="window.servicesManager.setPriceFilter(this.value)">
+          <option value="all">All Price Ranges</option>
+          <option value="budget">Budget (Under ₹2,000)</option>
+          <option value="mid">Mid-range (₹2,000 - ₹5,000)</option>
+          <option value="luxury">Luxury Stays (&gt; ₹5,000)</option>
+        </select>
+      </div>
+
+      <!-- Stay Tier Filter -->
+      <div class="filter-group">
+        <select id="hotel-tier-filter" class="filter-select" onchange="window.servicesManager.setStayTierFilter(this.value)">
+          <option value="all">All Stay Types</option>
+          <option value="Luxury">5-Star &amp; Luxury</option>
+          <option value="Heritage">Heritage &amp; Palace</option>
+          <option value="Resort">Resorts &amp; Nature</option>
+          <option value="Comfort">Comfort Hotels</option>
+          <option value="Budget">Budget &amp; Hostels</option>
+        </select>
+      </div>
+
+      <!-- Sort By -->
+      <div class="filter-group">
+        <select id="hotel-sort-select" class="filter-select" onchange="window.servicesManager.setSortBy(this.value)">
+          <option value="rating_desc">Highest Rated</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="name_asc">Name: A to Z</option>
+        </select>
+      </div>
+
+      <!-- Reset -->
+      <button class="btn btn-secondary btn-sm" onclick="window.servicesManager.resetFilters()" title="Reset all filters">
+        <i class="fa-solid fa-rotate-left"></i> Reset
+      </button>
+    </div>
+
+    <!-- Active Count Indicator Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 4px;">
+      <span id="hotels-count-badge" style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary);">
+        Loading hotels...
+      </span>
+      <span style="font-size: 0.82rem; color: #10b981; font-weight: 600;">
+        <i class="fa-solid fa-shield-check"></i> Best Rate Guaranteed &bull; Free Cancellation Available
+      </span>
+    </div>
+
+    <!-- Hotels Grid -->
+    <div id="services-grid" class="cards-grid">
+      <!-- Dynamically rendered from Supabase services / rich seed data -->
+    </div>
+
+  </main>
+
+  <!-- =========================================================================
+       HOTEL BOOKING MODAL
+       ========================================================================= -->
+  <div id="hotel-booking-modal" class="hotel-modal-overlay">
+    <div class="hotel-modal-container">
+      <button class="hotel-modal-close-btn" onclick="window.hotelBookingCtrl.closeBookingModal()" title="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Hotel Header Banner -->
+      <div class="hotel-modal-header">
+        <img id="bk-hotel-img" src="" alt="Hotel" />
+        <div class="hotel-modal-header-overlay"></div>
+        <div style="position: absolute; bottom: 14px; left: 24px; right: 24px; z-index: 2;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+              <h2 id="bk-hotel-name" style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0 0 4px; line-height: 1.2;">Hotel Name</h2>
+              <p id="bk-hotel-location" style="font-size: 0.82rem; color: #bae6fd; margin: 0;"></p>
+            </div>
+            <div style="text-align: right;">
+              <span id="bk-hotel-rating" class="badge" style="background: rgba(0,0,0,0.6); color: var(--accent-amber); font-weight: 700; font-size: 0.85rem;"></span>
+              <div style="margin-top: 4px;">
+                <span style="font-size: 0.72rem; color: var(--text-muted);">From</span>
+                <strong id="bk-hotel-base-rate" style="font-size: 1.15rem; color: #fff; font-weight: 800;">₹2,800</strong>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">/nt</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Booking Form Body -->
+      <div class="hotel-modal-body">
+        <form id="hotel-reservation-form" onsubmit="window.hotelBookingCtrl.handleBookingSubmit(event)">
+
+          <!-- Room Type Selection -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" for="bk-room-type">Select Room Category *</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-bed input-icon"></i>
+              <select id="bk-room-type" class="form-control form-control-icon" onchange="window.hotelBookingCtrl.onParamsChange()">
+                <option value="standard">Standard Deluxe AC Room (Base Price)</option>
+                <option value="executive">Executive City/Valley Suite (+₹900 / night)</option>
+                <option value="villa">Presidential Heritage Villa (+₹2,200 / night)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dates: Check-in & Check-out -->
+          <div class="modal-grid-2" style="margin-bottom: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="bk-checkin-date">Check-in Date *</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-calendar-day input-icon"></i>
+                <input type="date" id="bk-checkin-date" class="form-control form-control-icon" required onchange="window.hotelBookingCtrl.onParamsChange()" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bk-checkout-date">Check-out Date *</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-calendar-check input-icon"></i>
+                <input type="date" id="bk-checkout-date" class="form-control form-control-icon" required onchange="window.hotelBookingCtrl.onParamsChange()" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Guests and Rooms Count -->
+          <div class="modal-grid-2" style="margin-bottom: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="bk-rooms-count">Rooms Needed</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-door-open input-icon"></i>
+                <select id="bk-rooms-count" class="form-control form-control-icon" onchange="window.hotelBookingCtrl.onParamsChange()">
+                  <option value="1">1 Room</option>
+                  <option value="2">2 Rooms</option>
+                  <option value="3">3 Rooms</option>
+                  <option value="4">4 Rooms</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bk-adults-count">Adult Guests (12+ yrs)</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-user-group input-icon"></i>
+                <select id="bk-adults-count" class="form-control form-control-icon" onchange="window.hotelBookingCtrl.onParamsChange()">
+                  <option value="1">1 Adult</option>
+                  <option value="2" selected>2 Adults</option>
+                  <option value="3">3 Adults</option>
+                  <option value="4">4 Adults</option>
+                  <option value="6">6 Adults</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Price Breakdown Box -->
+          <div class="calc-breakdown-card">
+            <div class="calc-row">
+              <span id="bk-calc-nights">1 night × 1 room</span>
+              <span id="bk-calc-subtotal" style="font-weight: 700; color: #fff;">₹2,800</span>
+            </div>
+            <div class="calc-row">
+              <span>Applied Nightly Rate</span>
+              <span id="bk-calc-nightly-rate" style="font-weight: 600;">₹2,800 / night</span>
+            </div>
+            <div class="calc-row">
+              <span>GST &amp; Hospitality Taxes (12%)</span>
+              <span id="bk-calc-gst" style="color: var(--accent-amber);">₹336</span>
+            </div>
+            <div class="calc-row total-row">
+              <span>Total Payable</span>
+              <span id="bk-calc-grand-total" style="color: var(--accent-emerald);">₹3,136</span>
+            </div>
+            <div style="font-size: 0.72rem; color: #10b981; margin-top: 8px;">
+              <i class="fa-solid fa-circle-info"></i> No upfront payment required &bull; Pay at Hotel Check-in
+            </div>
+          </div>
+
+          <!-- Guest Contact Information -->
+          <h4 style="font-size: 0.95rem; color: #fff; font-weight: 700; margin: 18px 0 10px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px;">
+            Primary Guest Details
+          </h4>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="bk-guest-name">Full Name *</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-user input-icon"></i>
+              <input type="text" id="bk-guest-name" class="form-control form-control-icon" required placeholder="e.g. Ramesh Kumar" />
+            </div>
+          </div>
+
+          <div class="modal-grid-2" style="margin-bottom: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="bk-guest-email">Email Address *</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-envelope input-icon"></i>
+                <input type="email" id="bk-guest-email" class="form-control form-control-icon" required placeholder="ramesh@example.com" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bk-guest-phone">Phone / WhatsApp *</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-phone input-icon"></i>
+                <input type="tel" id="bk-guest-phone" class="form-control form-control-icon" required placeholder="+91 98765 43210" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label class="form-label" for="bk-guest-requests">Special Requests (Optional)</label>
+            <input type="text" id="bk-guest-requests" class="form-control" placeholder="e.g. Early check-in, high floor, non-smoking room" />
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="bk-submit-btn" class="btn btn-primary btn-block btn-lg" style="font-weight: 800; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);">
+            <i class="fa-solid fa-circle-check"></i> Confirm Reservation &amp; Get E-Voucher
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       BOOKING CONFIRMATION & E-VOUCHER MODAL
+       ========================================================================= -->
+  <div id="hotel-voucher-modal" class="hotel-modal-overlay">
+    <div class="hotel-modal-container" style="max-width: 540px;">
+      <button class="hotel-modal-close-btn" onclick="window.hotelBookingCtrl.closeConfirmationModal()" title="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="hotel-modal-body" style="padding: 32px 28px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #10b981; margin-bottom: 12px;">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <h2 style="font-size: 1.4rem; color: #fff; font-weight: 800; margin: 0 0 4px;">Hotel Reservation Confirmed!</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Show this digital e-voucher at the hotel reception desk upon check-in.</p>
+        </div>
+
+        <div class="voucher-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+            <div>
+              <span style="font-size: 0.72rem; color: #38bdf8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">CityMate Verified Stay</span>
+              <h3 id="v-hotel-name" style="font-size: 1.15rem; color: #fff; font-weight: 800; margin: 4px 0 2px;">Hotel Name</h3>
+              <p id="v-hotel-address" style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;"></p>
+            </div>
+            <div style="text-align: right;">
+              <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 700; font-size: 0.75rem;">CONFIRMED</span>
+            </div>
+          </div>
+
+          <div class="voucher-barcode" id="v-barcode-text">*CM-HTL-123456*</div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.84rem; margin-top: 14px;">
+            <div>
+              <span style="color: var(--text-muted); font-size: 0.72rem; display: block;">BOOKING CODE</span>
+              <strong id="v-booking-code" style="color: #38bdf8; font-family: monospace; font-size: 1rem;">CM-HTL-123456</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); font-size: 0.72rem; display: block;">TOTAL PAYABLE</span>
+              <strong id="v-total-amount" style="color: var(--accent-emerald); font-size: 1.05rem;">₹3,136</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); font-size: 0.72rem; display: block;">STAY DATES</span>
+              <strong id="v-stay-dates" style="color: #fff;">2026-10-29 to 2026-10-30</strong>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); font-size: 0.72rem; display: block;">DURATION</span>
+              <strong id="v-stay-nights" style="color: #fff;">1 night</strong>
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <span style="color: var(--text-muted); font-size: 0.72rem; display: block;">ROOM &amp; GUEST</span>
+              <span id="v-room-details" style="color: #fff; font-weight: 700; display: block;">1 × Standard Deluxe AC Room</span>
+              <span id="v-guest-details" style="color: var(--text-secondary); font-size: 0.8rem;">Ramesh Kumar (2 Adults)</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.15); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+            <span style="color: var(--text-muted);">Hotel Front Desk:</span>
+            <a id="v-hotel-phone" href="#" style="color: #38bdf8; font-weight: 700; text-decoration: none;">+91 422 230 1122</a>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button class="btn btn-secondary btn-md" style="flex: 1;" onclick="window.print()">
+            <i class="fa-solid fa-print"></i> Print Voucher
+          </button>
+          <button class="btn btn-primary btn-md" style="flex: 1;" onclick="window.hotelBookingCtrl.closeConfirmationModal()">
+            <i class="fa-solid fa-check"></i> Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MY BOOKINGS MODAL
+       ========================================================================= -->
+  <div id="my-bookings-modal" class="hotel-modal-overlay">
+    <div class="hotel-modal-container" style="max-width: 600px;">
+      <button class="hotel-modal-close-btn" onclick="window.hotelBookingCtrl.closeMyBookings()" title="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="hotel-modal-body" style="padding: 28px 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); display: flex; align-items: center; justify-content: center; color: #fff;">
+              <i class="fa-solid fa-suitcase"></i>
+            </div>
+            <div>
+              <h2 style="font-size: 1.25rem; color: #fff; font-weight: 800; margin: 0;">My Hotel Bookings</h2>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">View, print vouchers or manage your hotel reservations</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="my-bookings-list">
+          <!-- Dynamically populated from localStorage.citymate_hotel_bookings -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- CityMate Core Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/services.js"></script>
+  <script src="js/hotel-booking.js"></script>
+  <script src="js/script.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Set service type filter locked to Hotel
+      window.servicesManager.activeServiceType = 'Hotel';
+      window.servicesManager.lockedType = 'Hotel';
+
+      await window.servicesManager.initCityDropdown('services-city-select');
+      await window.servicesManager.renderServicesGrid('services-grid');
+
+      if (window.hotelBookingCtrl) {
+        window.hotelBookingCtrl.updateBookingsBadge();
+      }
+    });
+  </script>
+</body>
+</html>

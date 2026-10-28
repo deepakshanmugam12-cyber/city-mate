@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tourist Destinations &amp; Attractions – CITYMATE</title>
+  <meta name="description" content="Explore famous tourist spots, heritage temples, scenic waterfalls, and cultural wonders powered by Supabase." />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- CityMate Core Styles -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+</head>
+<body>
+
+  <!-- ================= Navigation Bar ================= -->
+  <header class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand-logo" title="CityMate - Smart Tourism Guide">
+        <div class="brand-icon">
+          <img class="brand-custom-img" src="assets/logo.png" alt="CityMate Logo" onerror="this.src='https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=100'" />
+        </div>
+        <div class="brand-text">CITY<span>MATE</span></div>
+      </a>
+
+      <!-- Desktop Nav Menu -->
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+          <li><a href="places.html" class="nav-link active"><i class="fa-solid fa-mountain-sun"></i> Places</a></li>
+          <li><a href="hotels.html" class="nav-link"><i class="fa-solid fa-hotel"></i> Hotels</a></li>
+          <li><a href="restaurants.html" class="nav-link"><i class="fa-solid fa-utensils"></i> Restaurants</a></li>
+          <li><a href="hospitals.html" class="nav-link"><i class="fa-solid fa-hospital"></i> Hospitals</a></li>
+          <li><a href="services.html" class="nav-link"><i class="fa-solid fa-bell-concierge"></i> Services</a></li>
+          <li><a href="map.html" class="nav-link"><i class="fa-solid fa-map-location-dot"></i> Map</a></li>
+        </ul>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle theme">
+          <i class="fa-solid fa-sun icon-sun"></i>
+          <i class="fa-solid fa-moon icon-moon"></i>
+        </button>
+
+        <!-- Guest Actions -->
+        <div id="nav-guest-actions" style="display: flex; gap: 8px;">
+          <a href="login.html" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+          </a>
+          <a href="register.html" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-user-plus"></i> Register
+          </a>
+        </div>
+
+        <!-- Logged In Actions -->
+        <div id="nav-user-actions" style="display: none; align-items: center; gap: 10px;">
+          <a href="profile.html" class="user-nav-btn" style="text-decoration: none;" title="View Profile">
+            <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
+            <span id="nav-user-name" style="font-weight: 700; font-size: 0.92rem; color: #fff;">Traveler</span>
+          </a>
+          <button class="btn btn-secondary btn-sm" onclick="window.authCtrl.logout()" title="Sign Out">
+            <i class="fa-solid fa-power-off"></i> Logout
+          </button>
+        </div>
+
+        <!-- Mobile Drawer Toggle -->
+        <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Toggle navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= Header Banner ================= -->
+  <div class="page-header-banner">
+    <div class="container">
+      <span class="badge badge-primary" style="margin-bottom: 10px;">
+        <i class="fa-solid fa-database"></i> Live Supabase PostgreSQL Database
+      </span>
+      <h1 class="page-header-title">Discover Tourist Destinations</h1>
+      <p class="page-header-subtitle">
+        Explore ancient temples, misty hill stations, wildlife sanctuaries, and scenic coastal shores curated for you.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= Main Content Container ================= -->
+  <main class="container" style="padding-bottom: 80px;">
+
+    <!-- Toolbar: Search, City Filter, Sort -->
+    <div class="filter-toolbar">
+      <!-- Search Input -->
+      <div class="filter-search-box">
+        <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+        <input type="text" id="places-search-input" placeholder="Search tourist places by name or keywords..." oninput="window.placesManager.setSearchQuery(this.value)" />
+      </div>
+
+      <!-- Filters Group -->
+      <div class="filter-group">
+        <!-- City Selector -->
+        <select id="places-city-select" class="filter-select" onchange="window.placesManager.setCityFilter(this.value)">
+          <option value="all">All Cities</option>
+        </select>
+
+        <!-- Sort By -->
+        <select id="places-sort-select" class="filter-select" onchange="window.placesManager.setSortBy(this.value)">
+          <option value="rating_desc">Highest Rated</option>
+          <option value="name_asc">Name (A &rarr; Z)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Category Pills Filter -->
+    <div class="category-pill-group">
+      <button class="category-pill active" data-cat="all" onclick="window.placesManager.setCategoryFilter('all', this)">
+        <i class="fa-solid fa-border-all"></i> All Categories
+      </button>
+      <button class="category-pill" data-cat="temple" onclick="window.placesManager.setCategoryFilter('temple', this)">
+        <i class="fa-solid fa-om"></i> Temples &amp; Spiritual
+      </button>
+      <button class="category-pill" data-cat="nature" onclick="window.placesManager.setCategoryFilter('nature', this)">
+        <i class="fa-solid fa-tree"></i> Nature &amp; Waterfalls
+      </button>
+      <button class="category-pill" data-cat="historical" onclick="window.placesManager.setCategoryFilter('historical', this)">
+        <i class="fa-solid fa-landmark"></i> Historical &amp; Forts
+      </button>
+      <button class="category-pill" data-cat="beach" onclick="window.placesManager.setCategoryFilter('beach', this)">
+        <i class="fa-solid fa-umbrella-beach"></i> Beaches &amp; Coast
+      </button>
+      <button class="category-pill" data-cat="rural" onclick="window.placesManager.setCategoryFilter('rural', this)">
+        <i class="fa-solid fa-wheat-awn"></i> Rural &amp; Heritage
+      </button>
+      <button class="category-pill" data-cat="shopping" onclick="window.placesManager.setCategoryFilter('shopping', this)">
+        <i class="fa-solid fa-bag-shopping"></i> Shopping &amp; Bazaars
+      </button>
+      <button class="category-pill" data-cat="adventure" onclick="window.placesManager.setCategoryFilter('adventure', this)">
+        <i class="fa-solid fa-compass"></i> Trekking &amp; Adventure
+      </button>
+      <button class="category-pill" data-cat="museum" onclick="window.placesManager.setCategoryFilter('museum', this)">
+        <i class="fa-solid fa-building-columns"></i> Museums &amp; Galleries
+      </button>
+    </div>
+
+    <!-- Places Grid -->
+    <div id="places-grid" class="cards-grid">
+      <!-- Dynamically populated from Supabase -->
+    </div>
+
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Supabase JS SDK (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- CityMate Core Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/places.js"></script>
+  <script src="js/script.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Populate Cities Dropdown
+      const cities = await window.placesManager.fetchCities();
+      const citySelect = document.getElementById('places-city-select');
+      if (citySelect && cities) {
+        citySelect.innerHTML = '<option value="all">All Cities</option>' +
+          cities.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      }
+
+      // 2. Render Places Grid from Supabase
+      window.placesManager.renderPlacesGrid('places-grid');
+    });
+  </script>
+</body>
+</html>

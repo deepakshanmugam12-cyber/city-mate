@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTTP Basic Authentication Info – CITYMATE</title>
+  <meta name="description" content="CityMate uses secure server-side HTTP Basic Authentication to protect traveler resources." />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- CityMate Core Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+
+  <style>
+    .info-container {
+      max-width: 860px;
+      margin: 40px auto 80px;
+      padding: 0 24px;
+    }
+    .status-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-lg);
+    }
+    .status-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .status-authenticated {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-unauthenticated {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .feature-check-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .feature-check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+    .feature-check-item i {
+      color: var(--primary-light);
+      font-size: 1.1rem;
+    }
+    .tech-box {
+      background: rgba(10, 15, 29, 0.6);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-top: 24px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .tech-box code {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--primary-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container navbar-container">
+      <a href="/" class="brand-logo">
+        <div class="brand-icon">
+          <img class="brand-custom-img" src="assets/logo.png" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="Logo" />
+        </div>
+        <div class="brand-text">CITY<span>MATE</span></div>
+      </a>
+      <div class="nav-actions">
+        <a href="/" class="btn btn-outline btn-sm">
+          <i class="fa-solid fa-house"></i> Back to Home
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Info Container -->
+  <main class="info-container">
+    <div style="text-align: center; margin-bottom: 32px;">
+      <span class="badge badge-primary" style="margin-bottom: 10px;">Security Architecture</span>
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: #fff;">HTTP Basic Authentication</h1>
+      <p style="color: var(--text-secondary); max-width: 600px; margin: 8px auto 0;">
+        CityMate uses secure server-side HTTP Basic Authentication conforming to RFC 7235.
+      </p>
+    </div>
+
+    <!-- Live Status Card -->
+    <div class="status-card">
+      <div class="status-header">
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Authentication Status</div>
+          <div id="auth-status-badge" class="status-indicator status-unauthenticated" style="margin-top: 6px;">
+            <i class="fa-solid fa-circle-xmark"></i>
+            <span>Not Authenticated</span>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Current User</div>
+          <div id="auth-username-display" style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 4px;">
+            Guest (Unauthenticated)
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Access Level</div>
+          <div id="auth-role-display" style="font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); margin-top: 4px;">
+            Public Access Only
+          </div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 12px;">Protected Features</h3>
+      <p style="font-size: 0.9rem; color: var(--text-secondary);">
+        The following CityMate capabilities require valid HTTP Basic Authentication credentials:
+      </p>
+
+      <ul class="feature-check-list">
+        <li class="feature-check-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span><strong>Favorites Wishlist</strong> (/favorites)</span>
+        </li>
+        <li class="feature-check-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span><strong>Recommendations Engine</strong> (/recommendations)</span>
+        </li>
+        <li class="feature-check-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span><strong>Smart Trip Planner</strong> (/trip-planner)</span>
+        </li>
+        <li class="feature-check-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span><strong>User Profile Details</strong> (/profile)</span>
+        </li>
+        <li class="feature-check-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span><strong>Verified Review Submission</strong> (POST /api/reviews)</span>
+        </li>
+        <li class="feature-check-item">
+          <i class="fa-solid fa-shield-halved" style="color: var(--accent-amber);"></i>
+          <span><strong>Admin Dashboard</strong> (/admin – Admin role only)</span>
+        </li>
+      </ul>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap;">
+        <a href="/" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-arrow-left"></i> Continue to CityMate
+        </a>
+        <a href="/profile" class="btn btn-secondary btn-lg" id="btn-test-auth">
+          <i class="fa-solid fa-lock"></i> Access Protected Profile (Prompts Auth)
+        </a>
+        <a href="/admin" class="btn btn-secondary btn-lg" style="border-color: rgba(245, 158, 11, 0.4);">
+          <i class="fa-solid fa-shield-halved" style="color: var(--accent-amber);"></i> Access Protected Admin
+        </a>
+      </div>
+
+      <!-- Technical Architecture Explanation -->
+      <div class="tech-box">
+        <strong><i class="fa-solid fa-circle-info" style="color: var(--primary-light);"></i> How CityMate HTTP Basic Auth Works:</strong>
+        <p style="margin-top: 6px;">
+          1. When an unauthenticated request reaches a protected route (e.g. <code>/profile</code>, <code>/favorites</code>, <code>/admin</code>), the backend responds with HTTP <code>401 Unauthorized</code> and the challenge header <code>WWW-Authenticate: Basic realm="CityMate"</code>.<br/>
+          2. The browser automatically displays its native username and password authentication modal dialog.<br/>
+          3. Once submitted, credentials are sent in the <code>Authorization: Basic &lt;base64&gt;</code> request header and validated on the server against configured environment credentials and hashed database users.<br/>
+          4. <strong>Important Note on Logout:</strong> HTTP Basic Authentication credentials are held in browser memory for the session lifetime. True logout in Basic Auth is achieved by closing the browser session or prompting with a new challenge.
+        </p>
+      </div>
+
+      <!-- Test Credentials Helper -->
+      <div style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--border-subtle); font-size: 0.88rem;">
+        <strong style="color: #fff;">Development Test Credentials:</strong>
+        <div style="display: flex; gap: 24px; margin-top: 8px; flex-wrap: wrap;">
+          <div>
+            <span style="color: var(--primary-light); font-weight: 700;">Traveler:</span>
+            <code>traveler</code> / <code>traveler123</code>
+          </div>
+          <div>
+            <span style="color: var(--accent-amber); font-weight: 700;">Administrator:</span>
+            <code>admin</code> / <code>change-this-password</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Script to query auth status -->
+  <script>
+    async function checkAuthStatus() {
+      try {
+        const res = await fetch('/auth/status');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            const badge = document.getElementById('auth-status-badge');
+            badge.className = 'status-indicator status-authenticated';
+            badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Authenticated</span>';
+
+            document.getElementById('auth-username-display').textContent = data.user.username || data.user.full_name;
+            document.getElementById('auth-role-display').textContent = `${(data.user.role || 'user').toUpperCase()} Privileges`;
+          }
+        }
+      } catch (e) {
+        console.log('Auth status check offline/mock mode:', e);
+      }
+    }
+    checkAuthStatus();
+  </script>
+</body>
+</html>

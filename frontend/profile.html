@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile &amp; Travel Hub – CITYMATE</title>
+  <meta name="description" content="Manage your CityMate user profile, customize your traveler details, and view your saved favourite destinations and written reviews." />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- CityMate Core Styles -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+
+  <style>
+    .profile-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 28px;
+      margin-top: 32px;
+      margin-bottom: 60px;
+    }
+
+    @media (max-width: 900px) {
+      .profile-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .profile-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 30px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+
+    .profile-avatar-wrap {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      position: relative;
+      border: 3px solid var(--primary-light);
+      box-shadow: 0 0 20px rgba(13, 148, 136, 0.35);
+      overflow: hidden;
+      background: var(--bg-dark);
+    }
+
+    .profile-avatar-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-nav-tabs {
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .profile-tab-btn {
+      background: none;
+      border: none;
+      padding: 12px 18px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      transition: var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .profile-tab-btn:hover {
+      color: #fff;
+    }
+
+    .profile-tab-btn.active {
+      color: var(--primary-light);
+    }
+
+    .profile-tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary-light);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand-logo" title="CityMate - Home">
+        <div class="brand-icon">
+          <img class="brand-custom-img" src="assets/logo.png" alt="CityMate Logo" onerror="this.src='https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=100'" />
+        </div>
+        <div class="brand-text">CITY<span>MATE</span></div>
+      </a>
+
+      <!-- Desktop Menu -->
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+          <li><a href="places.html" class="nav-link"><i class="fa-solid fa-mountain-sun"></i> Places</a></li>
+          <li><a href="hotels.html" class="nav-link"><i class="fa-solid fa-hotel"></i> Hotels</a></li>
+          <li><a href="restaurants.html" class="nav-link"><i class="fa-solid fa-utensils"></i> Restaurants</a></li>
+          <li><a href="hospitals.html" class="nav-link"><i class="fa-solid fa-hospital"></i> Hospitals</a></li>
+          <li><a href="services.html" class="nav-link"><i class="fa-solid fa-bell-concierge"></i> Services</a></li>
+          <li><a href="map.html" class="nav-link"><i class="fa-solid fa-map-location-dot"></i> Map</a></li>
+        </ul>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle theme">
+          <i class="fa-solid fa-sun icon-sun"></i>
+          <i class="fa-solid fa-moon icon-moon"></i>
+        </button>
+
+        <div id="nav-guest-actions" style="display: flex; gap: 8px;">
+          <a href="login.html" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In</a>
+          <a href="register.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-user-plus"></i> Register</a>
+        </div>
+
+        <div id="nav-user-actions" style="display: none; align-items: center; gap: 10px;">
+          <a href="profile.html" class="user-nav-btn active" style="text-decoration: none;" title="View Profile">
+            <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
+            <span id="nav-user-name" style="font-weight: 700; font-size: 0.92rem; color: #fff;">Traveler</span>
+          </a>
+          <button class="btn btn-secondary btn-sm" onclick="window.authCtrl.logout()"><i class="fa-solid fa-power-off"></i> Logout</button>
+        </div>
+
+        <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Header Banner -->
+  <div class="page-header-banner">
+    <div class="container">
+      <span class="badge badge-primary" style="margin-bottom: 10px;">
+        <i class="fa-solid fa-user-shield"></i> Verified Authenticated Profile
+      </span>
+      <h1 class="page-header-title">Traveler Profile &amp; Saved Places</h1>
+      <p class="page-header-subtitle">
+        Manage your personal account credentials, access your wishlist of saved destinations, and review past feedback.
+      </p>
+    </div>
+  </div>
+
+  <!-- Main Profile Layout Container -->
+  <main class="container">
+    <div class="profile-layout">
+      
+      <!-- Left Sidebar: Profile Summary Card -->
+      <aside>
+        <div class="profile-card">
+          <div class="profile-avatar-wrap">
+            <img id="profile-avatar-img" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Profile Avatar" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'" />
+          </div>
+          <h2 id="profile-display-name" style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-bottom: 4px;">Loading...</h2>
+          <p id="profile-display-email" style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 8px;">traveler@citymate.com</p>
+          <span id="profile-joined-date" style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 20px;">Member since 2026</span>
+
+          <hr style="border: none; border-top: 1px solid var(--border-subtle); margin-bottom: 20px;" />
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+            <div style="background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Saved Places</span>
+              <div id="profile-favourites-count" style="font-size: 1.3rem; font-weight: 800; color: var(--primary-light);">0</div>
+            </div>
+            <div style="background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">My Reviews</span>
+              <div id="profile-reviews-count" style="font-size: 1.3rem; font-weight: 800; color: var(--accent-amber);">0</div>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary btn-block" onclick="window.authCtrl.logout()">
+            <i class="fa-solid fa-power-off"></i> Sign Out
+          </button>
+        </div>
+      </aside>
+
+      <!-- Right Main: Tabs (Settings, Favourites, Reviews) -->
+      <section>
+        <!-- Nav Tabs -->
+        <div class="profile-nav-tabs">
+          <button class="profile-tab-btn active" data-tab="tab-favourites" onclick="switchProfileTab('tab-favourites', this)">
+            <i class="fa-solid fa-heart" style="color: var(--accent-rose);"></i> My Favourites
+          </button>
+          <button class="profile-tab-btn" data-tab="tab-reviews" onclick="switchProfileTab('tab-reviews', this)">
+            <i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> My Reviews
+          </button>
+          <button class="profile-tab-btn" data-tab="tab-edit-profile" onclick="switchProfileTab('tab-edit-profile', this)">
+            <i class="fa-solid fa-user-gear"></i> Edit Profile
+          </button>
+        </div>
+
+        <!-- Tab 1: Favourites -->
+        <div id="tab-favourites" class="tab-content active">
+          <h3 style="color: #fff; font-size: 1.25rem; font-weight: 700; margin-bottom: 16px;">
+            <i class="fa-solid fa-heart" style="color: var(--accent-rose);"></i> Bookmarked Favourites
+          </h3>
+          <div id="profile-favourites-grid" class="cards-grid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.8rem;"></i>
+              <p style="margin-top: 10px;">Loading your saved favourites from Supabase...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Reviews -->
+        <div id="tab-reviews" class="tab-content">
+          <h3 style="color: #fff; font-size: 1.25rem; font-weight: 700; margin-bottom: 16px;">
+            <i class="fa-solid fa-comments" style="color: var(--primary-light);"></i> Destination Reviews Written By You
+          </h3>
+          <div id="profile-reviews-list">
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.8rem;"></i>
+              <p style="margin-top: 10px;">Loading your reviews from Supabase...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Edit Profile Form -->
+        <div id="tab-edit-profile" class="tab-content">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 28px;">
+            <h3 style="color: #fff; font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">Update Personal Details</h3>
+            <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 24px;">Updates are saved to Supabase Row Level Security protected tables.</p>
+
+            <div id="profile-save-success" style="display: none; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px; color: #a7f3d0; font-size: 0.88rem;">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Profile details updated successfully!</span>
+            </div>
+
+            <form onsubmit="window.profileManager.updateProfile(event)">
+              <div class="form-group">
+                <label class="form-label" for="profile-input-name">Full Name *</label>
+                <input type="text" id="profile-input-name" class="form-control" required placeholder="Enter your full name" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="profile-input-avatar">Avatar Image URL</label>
+                <input type="url" id="profile-input-avatar" class="form-control" placeholder="https://example.com/avatar.jpg" />
+                <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;">Provide an image URL or leave blank to use generated avatar.</span>
+              </div>
+
+              <button type="submit" id="btn-save-profile" class="btn btn-primary" style="font-weight: 700;">
+                <i class="fa-solid fa-floppy-disk"></i> Save Profile
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- CityMate Core Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/script.js"></script>
+
+  <script>
+    function switchProfileTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+      if (btnElement) btnElement.classList.add('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.profileManager.init();
+    });
+  </script>
+</body>
+</html>
