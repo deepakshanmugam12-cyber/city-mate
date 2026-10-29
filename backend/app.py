@@ -175,9 +175,13 @@ def protected_recommendations():
     return send_from_directory(FRONTEND_DIR, 'index.html')
 
 @app.route('/trip-planner', methods=['GET'])
-@requires_auth(role='user')
-def protected_planner():
-    """Protected trip planner page."""
+@app.route('/planner', methods=['GET'])
+@optional_auth
+def planner_page():
+    """Smart Trip Planner page."""
+    planner_file = os.path.join(FRONTEND_DIR, 'planner.html')
+    if os.path.exists(planner_file):
+        return send_from_directory(FRONTEND_DIR, 'planner.html')
     return send_from_directory(FRONTEND_DIR, 'index.html')
 
 @app.route('/admin', methods=['GET'])

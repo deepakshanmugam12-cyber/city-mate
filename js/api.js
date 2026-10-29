@@ -739,19 +739,75 @@ class ApiService {
       } catch (e) {}
     }
 
-    // Local planner generator
-    const cities = JSON.parse(localStorage.getItem('cm_cities') || '[]');
-    const city = cities.find(c => c.id === Number(plannerParams.city_id)) || cities[0] || { id: 1, name: 'Destination' };
-    const allPlaces = (JSON.parse(localStorage.getItem('cm_places') || '[]'))
-      .filter(p => p.city_id === city.id);
-    const services = (JSON.parse(localStorage.getItem('cm_services') || '[]'))
-      .filter(s => s.city_id === city.id);
+    // Local planner generator with resilient SEED_DATA, Supabase, and localStorage fallback
+    let cities = (typeof SEED_DATA !== 'undefined' && Array.isArray(SEED_DATA.cities) && SEED_DATA.cities.length)
+      ? SEED_DATA.cities
+      : [];
+    if (!cities.length) {
+      try { cities = JSON.parse(localStorage.getItem('cm_cities') || '[]'); } catch (e) {}
+    }
 
-    const hotels = services.filter(s => s.service_type === 'hotel');
-    const restaurants = services.filter(s => s.service_type === 'restaurant');
-    const bunks = services.filter(s => s.service_type === 'petrol_bunk');
-    const hospitals = services.filter(s => s.service_type === 'hospital');
-    const policeList = services.filter(s => s.service_type === 'police');
+    const targetCityId = Number(plannerParams.city_id) || 1;
+    const city = cities.find(c => Number(c.id) === targetCityId) || cities[0] || { id: 1, name: 'Coimbatore', state: 'Tamil Nadu' };
+
+    let allPlaces = (typeof SEED_DATA !== 'undefined' && Array.isArray(SEED_DATA.places) && SEED_DATA.places.length)
+      ? SEED_DATA.places.filter(p => Number(p.city_id) === Number(city.id))
+      : [];
+    if (!allPlaces.length) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('cm_places') || '[]');
+        allPlaces = stored.filter(p => Number(p.city_id) === Number(city.id));
+      } catch (e) {}
+    }
+
+    let services = (typeof SEED_DATA !== 'undefined' && Array.isArray(SEED_DATA.services) && SEED_DATA.services.length)
+      ? SEED_DATA.services.filter(s => Number(s.city_id) === Number(city.id))
+      : [];
+    if (!services.length) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('cm_services') || '[]');
+        services = stored.filter(s => Number(s.city_id) === Number(city.id));
+      } catch (e) {}
+    }
+
+    // Try Supabase if places or services are missing
+    if ((!allPlaces.length || !services.length) && window.supabaseClient) {
+      try {
+        const { data: pData } = await window.supabaseClient.from('places').select('*').eq('city_id', city.id);
+        if (pData && pData.length) {
+          allPlaces = pData.map(p => ({
+            ...p,
+            category_slug: (p.category || 'landmark').toLowerCase(),
+            lat: parseFloat(p.latitude || p.lat),
+            lng: parseFloat(p.longitude || p.lng)
+          }));
+        }
+        const { data: sData } = await window.supabaseClient.from('services').select('*').eq('city_id', city.id);
+        if (sData && sData.length) {
+          services = sData.map(s => ({
+            ...s,
+            lat: parseFloat(s.latitude || s.lat),
+            lng: parseFloat(s.longitude || s.lng)
+          }));
+        }
+      } catch (err) {
+        console.warn('Supabase planner fetch notice:', err);
+      }
+    }
+
+    // Universal fallback: if places are still empty, grab any available places across cities
+    if (!allPlaces.length && typeof SEED_DATA !== 'undefined' && Array.isArray(SEED_DATA.places)) {
+      allPlaces = SEED_DATA.places.slice(0, 12);
+    }
+    if (!services.length && typeof SEED_DATA !== 'undefined' && Array.isArray(SEED_DATA.services)) {
+      services = SEED_DATA.services.slice(0, 12);
+    }
+
+    const hotels = services.filter(s => (s.service_type || '').includes('hotel'));
+    const restaurants = services.filter(s => (s.service_type || '').includes('restaurant') || (s.service_type || '').includes('cafe'));
+    const bunks = services.filter(s => (s.service_type || '').includes('petrol') || (s.service_type || '').includes('fuel'));
+    const hospitals = services.filter(s => (s.service_type || '').includes('hospital') || (s.service_type || '').includes('clinic'));
+    const policeList = services.filter(s => (s.service_type || '').includes('police') || (s.service_type || '').includes('security'));
 
     const days = Math.min(14, Math.max(1, Number(plannerParams.days || 2) || 2));
     const budget = (plannerParams.budget || 'moderate').toLowerCase();
@@ -761,13 +817,13 @@ class ApiService {
     // Filter hotels by budget
     let matchedHotels = hotels;
     if (budget === 'budget') {
-      matchedHotels = hotels.filter(h => h.price_level === '$');
+      matchedHotels = hotels.filter(h => h.price_level === '$' || (h.rating && h.rating < 4.4));
     } else if (budget === 'luxury') {
-      matchedHotels = hotels.filter(h => h.price_level === '$$$$' || h.price_level === '$$$');
+      matchedHotels = hotels.filter(h => h.price_level === '$$$$' || h.price_level === '$$$' || (h.rating && h.rating >= 4.7));
     } else {
-      matchedHotels = hotels.filter(h => h.price_level === '$$' || h.price_level === '$$$');
+      matchedHotels = hotels.filter(h => h.price_level === '$$' || h.price_level === '$$$' || !h.price_level);
     }
-    if (!matchedHotels.length) matchedHotels = hotels;
+    if (!matchedHotels.length) matchedHotels = hotels.length ? hotels : services;
 
     // Filter restaurants for breakfast, lunch, and dinner
     const bKeywords = ['breakfast', 'tiffin', 'morning', 'cafe', 'bakery', 'idli', 'coffee', 'bakes', 'waffles'];
@@ -788,18 +844,18 @@ class ApiService {
     });
 
     if (!breakfastSpots.length) breakfastSpots = restaurants.filter(r => r.price_level === '$' || r.price_level === '$$');
-    if (!breakfastSpots.length) breakfastSpots = restaurants;
-    if (!lunchSpots.length) lunchSpots = restaurants;
+    if (!breakfastSpots.length) breakfastSpots = restaurants.length ? restaurants : services;
+    if (!lunchSpots.length) lunchSpots = restaurants.length ? restaurants : services;
     if (!dinnerSpots.length) dinnerSpots = restaurants.filter(r => r.price_level === '$$$' || r.price_level === '$$$$');
-    if (!dinnerSpots.length) dinnerSpots = restaurants;
+    if (!dinnerSpots.length) dinnerSpots = restaurants.length ? restaurants : services;
 
     // Filter/rank candidate places by interest
     const matchedPlaces = [];
     const otherPlaces = [];
     allPlaces.forEach(p => {
-      const cat = (p.category_slug || '').toLowerCase();
-      const tags = (p.tags || []).map(t => t.toLowerCase());
-      if (interests.includes(cat) || tags.some(t => interests.includes(t))) {
+      const cat = (p.category_slug || p.category || '').toLowerCase();
+      const tags = (p.tags || []).map(t => String(t).toLowerCase());
+      if (interests.some(i => cat.includes(i) || tags.some(t => t.includes(i)))) {
         matchedPlaces.push(p);
       } else {
         otherPlaces.push(p);
@@ -1716,6 +1772,150 @@ class ApiService {
           steps: steps
         }]
       }]
+    };
+  }
+
+  // --- Smart Trip Planner ---
+  async generateTripPlan(params = {}) {
+    const isOnline = await this.checkBackend();
+    if (isOnline) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/trip-planner`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.itinerary && data.itinerary.length > 0) {
+            return data;
+          }
+        }
+      } catch (err) {
+        console.warn('Backend trip-planner API call failed, using client-side fallback:', err);
+      }
+    }
+    return this._generateLocalTripPlan(params);
+  }
+
+  _generateLocalTripPlan(params = {}) {
+    const cityId = Number(params.city_id || 1);
+    const days = Math.min(14, Math.max(1, Number(params.days || 2)));
+    const budget = (params.budget || 'moderate').toLowerCase();
+
+    const cities = (typeof SEED_DATA !== 'undefined' && SEED_DATA.cities) ? SEED_DATA.cities : [
+      { id: 1, name: 'Coimbatore', state: 'Tamil Nadu' },
+      { id: 2, name: 'Chennai', state: 'Tamil Nadu' },
+      { id: 3, name: 'Ooty', state: 'Tamil Nadu' },
+      { id: 4, name: 'Madurai', state: 'Tamil Nadu' },
+      { id: 5, name: 'Salem', state: 'Tamil Nadu' },
+      { id: 6, name: 'Bengaluru', state: 'Karnataka' },
+      { id: 7, name: 'Kodaikanal', state: 'Tamil Nadu' },
+      { id: 8, name: 'Pondicherry', state: 'Puducherry' },
+      { id: 9, name: 'Kanyakumari', state: 'Tamil Nadu' },
+      { id: 10, name: 'Thanjavur', state: 'Tamil Nadu' },
+      { id: 11, name: 'Mysuru', state: 'Karnataka' },
+      { id: 12, name: 'Munnar', state: 'Kerala' }
+    ];
+
+    const city = cities.find(c => Number(c.id) === cityId) || cities[0];
+
+    let allPlaces = [];
+    if (typeof SEED_DATA !== 'undefined' && SEED_DATA.places) {
+      allPlaces = SEED_DATA.places.filter(p => Number(p.city_id) === cityId);
+      if (allPlaces.length === 0) {
+        allPlaces = SEED_DATA.places.slice(0, 10);
+      }
+    }
+
+    let allServices = [];
+    if (typeof SEED_DATA !== 'undefined' && SEED_DATA.services) {
+      allServices = SEED_DATA.services.filter(s => Number(s.city_id) === cityId);
+      if (allServices.length === 0) {
+        allServices = SEED_DATA.services.slice(0, 15);
+      }
+    }
+
+    const restaurants = allServices.filter(s => (s.service_type || '').includes('restaurant'));
+    const hotels = allServices.filter(s => (s.service_type || '').includes('hotel'));
+    const hospitals = allServices.filter(s => (s.service_type || '').includes('hospital'));
+    const petrols = allServices.filter(s => (s.service_type || '').includes('petrol'));
+    const police = allServices.filter(s => (s.service_type || '').includes('police'));
+
+    const dailyRate = budget === 'budget' ? 1600 : (budget === 'luxury' ? 8500 : 3800);
+    const budgetBreakdown = {
+      stay_per_day: budget === 'budget' ? '₹800' : (budget === 'luxury' ? '₹5,200' : '₹2,100'),
+      food_per_day: budget === 'budget' ? '₹450' : (budget === 'luxury' ? '₹2,100' : '₹1,000'),
+      sightseeing_per_day: budget === 'budget' ? '₹150' : (budget === 'luxury' ? '₹500' : '₹300'),
+      transit_per_day: budget === 'budget' ? '₹200' : (budget === 'luxury' ? '₹700' : '₹400'),
+      recommended_stay_tier: budget === 'budget' ? 'Budget Lodges & Hostels' : (budget === 'luxury' ? '5-Star Luxury Resorts' : 'Comfort 3-Star Hotels'),
+      recommended_transit: budget === 'budget' ? 'Public Transit & Shared Auto' : (budget === 'luxury' ? 'Chauffeur Luxury Sedan' : 'App Cabs & Rentals')
+    };
+
+    const slotConfigs = [
+      { slot_number: 1, slot_name: 'Morning Spotlight', time: '08:30 AM - 10:45 AM', badge: 'Spot 1 • Morning Exploration', activity_prefix: 'Iconic morning exploration & scenic photography' },
+      { slot_number: 2, slot_name: 'Mid-Day Cultural Visit', time: '11:15 AM - 01:00 PM', badge: 'Spot 2 • Cultural & Heritage Stop', activity_prefix: 'Architectural tour, exhibits & historical immersion' },
+      { slot_number: 3, slot_name: 'Afternoon Scenic Leisure', time: '03:00 PM - 05:00 PM', badge: 'Spot 3 • Afternoon Leisure & Nature', activity_prefix: 'Lush garden strolling, craft shopping & boat rides' },
+      { slot_number: 4, slot_name: 'Golden Hour Sunset Finale', time: '05:30 PM - 07:30 PM', badge: 'Spot 4 • Sunset View & Twilight Leisure', activity_prefix: 'Breathtaking twilight vista, light show & evening breeze' }
+    ];
+
+    const itinerary = [];
+    for (let d = 1; d <= days; d++) {
+      const daySpots = slotConfigs.map((cfg, idx) => {
+        const place = allPlaces.length ? allPlaces[((d - 1) * 4 + idx) % allPlaces.length] : {
+          name: `${city.name} Landmark ${idx + 1}`,
+          category: 'Attraction',
+          rating: 4.7,
+          entry_fee: 50,
+          lat: 11.0168,
+          lng: 76.9558,
+          image_url: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=600'
+        };
+
+        return {
+          spot_number: cfg.slot_number,
+          slot_name: cfg.slot_name,
+          badge: cfg.badge,
+          time: cfg.time,
+          place: place,
+          activity: `${cfg.activity_prefix} at ${place.name}`,
+          tip: 'Arrive early to avoid queues and enjoy the best ambient photography.'
+        };
+      });
+
+      const bRest = restaurants.length ? restaurants[(d - 1) % restaurants.length] : { name: `${city.name} Morning Tiffin & Coffee Center`, address: 'Central Heritage Road', rating: 4.6, lat: 11.0168, lng: 76.9558 };
+      const lRest = restaurants.length ? restaurants[(d * 2) % restaurants.length] : { name: `${city.name} Traditional Banana Leaf Feast`, address: 'Town Promenade', rating: 4.7, lat: 11.0168, lng: 76.9558 };
+      const dRest = restaurants.length ? restaurants[(d * 3) % restaurants.length] : { name: `${city.name} Rooftop Garden & Barbecue`, address: 'Panoramic Viewpoint', rating: 4.8, lat: 11.0168, lng: 76.9558 };
+      const hotel = hotels.length ? hotels[(d - 1) % hotels.length] : { name: `${city.name} Comfort Suites & Heritage Inn`, address: 'Central City', price_level: budget === 'budget' ? '$' : (budget === 'luxury' ? '$$$$' : '$$'), rating: 4.5 };
+
+      itinerary.push({
+        day: d,
+        title: `Day ${d}: Highlights & Cultural Wonders of ${city.name}`,
+        expected_amount_day: `₹${dailyRate.toLocaleString()}`,
+        day_amount_numeric: dailyRate,
+        estimated_travel_km: (10.0 + d * 3).toFixed(1),
+        spots: daySpots,
+        suggested_hotel: hotel,
+        nearest_hospital: hospitals.length ? hospitals[0] : null,
+        nearest_petrol: petrols.length ? petrols[0] : null,
+        police_assistance: police.length ? police[0] : null,
+        meals: {
+          breakfast: { time: '07:30 AM - 09:00 AM', restaurant: bRest, recommendation: 'Authentic morning filter kaapi and warm ghee roast dosas' },
+          lunch: { time: '01:00 PM - 02:30 PM', restaurant: lRest, recommendation: 'Specialty banana leaf meals and regional delicacies' },
+          dinner: { time: '08:00 PM - 10:00 PM', restaurant: dRest, recommendation: 'Scenic evening dining and relaxing barbecue' }
+        }
+      });
+    }
+
+    return {
+      city,
+      days,
+      budget,
+      daily_rate: dailyRate,
+      total_estimated_budget: `₹${(dailyRate * days).toLocaleString()}`,
+      budget_breakdown: budgetBreakdown,
+      spots_per_day: 4,
+      itinerary
     };
   }
 

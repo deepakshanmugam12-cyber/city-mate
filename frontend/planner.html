@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Trip Planner – Automated Multi-Day Itineraries | CITYMATE</title>
+  <meta name="description" content="Generate complete day-by-day itineraries with 3-4 sightseeing spots per day, curated breakfast, lunch, and dinner recommendations, stay suggestions, and interactive in-app map navigation." />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- CityMate Core Styles -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+</head>
+<body>
+
+  <!-- ================= Navigation Bar ================= -->
+  <header class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand-logo" title="CityMate - Smart Tourism Guide">
+        <div class="brand-icon">
+          <img class="brand-custom-img" src="assets/logo.png" alt="CityMate Logo" onerror="this.src='https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=100'" />
+        </div>
+        <div class="brand-text">CITY<span>MATE</span></div>
+      </a>
+
+      <!-- Desktop Nav Menu -->
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+          <li><a href="places.html" class="nav-link"><i class="fa-solid fa-mountain-sun"></i> Places</a></li>
+          <li><a href="hotels.html" class="nav-link"><i class="fa-solid fa-hotel"></i> Hotels</a></li>
+          <li><a href="restaurants.html" class="nav-link"><i class="fa-solid fa-utensils"></i> Restaurants</a></li>
+          <li><a href="hospitals.html" class="nav-link"><i class="fa-solid fa-hospital"></i> Hospitals</a></li>
+          <li><a href="services.html" class="nav-link"><i class="fa-solid fa-bell-concierge"></i> Services</a></li>
+          <li><a href="map.html" class="nav-link"><i class="fa-solid fa-map-location-dot"></i> Map</a></li>
+          <li><a href="planner.html" class="nav-link active"><i class="fa-solid fa-route"></i> Planner</a></li>
+          <li><a href="profile.html" class="nav-link"><i class="fa-solid fa-circle-user"></i> Profile</a></li>
+        </ul>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle theme">
+          <i class="fa-solid fa-sun icon-sun"></i>
+          <i class="fa-solid fa-moon icon-moon"></i>
+        </button>
+
+        <!-- Guest Actions -->
+        <div id="nav-guest-actions" style="display: flex; gap: 8px;">
+          <a href="login.html" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+          </a>
+          <a href="register.html" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-user-plus"></i> Register
+          </a>
+        </div>
+
+        <!-- Logged In Actions -->
+        <div id="nav-user-actions" style="display: none; align-items: center; gap: 10px;">
+          <a href="profile.html" class="user-nav-btn" style="text-decoration: none;" title="View Profile">
+            <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
+            <span id="nav-user-name" style="font-weight: 700; font-size: 0.92rem; color: #fff;">Traveler</span>
+          </a>
+          <button class="btn btn-secondary btn-sm" onclick="window.authCtrl.logout()" title="Sign Out">
+            <i class="fa-solid fa-power-off"></i> Logout
+          </button>
+        </div>
+
+        <!-- Mobile Drawer Toggle -->
+        <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Toggle navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= Header Banner ================= -->
+  <div class="page-header-banner">
+    <div class="container">
+      <span class="badge badge-primary" style="margin-bottom: 10px;">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Automated Travel Scheduling
+      </span>
+      <h1 class="page-header-title">Smart Trip Planner</h1>
+      <p class="page-header-subtitle">
+        Curating balanced day-by-day itineraries with 3 to 4 sequenced attractions, verified dining journeys, and budget-tailored stays.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= Main Trip Planner Container ================= -->
+  <main class="container" style="padding-bottom: 80px;">
+
+    <!-- Trip Planner Form Card -->
+    <div class="planner-form-card" style="margin-top: 10px;">
+      <div class="form-row" style="margin-bottom: 24px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="planner-city-select"><i class="fa-solid fa-location-dot" style="color:var(--primary-light);"></i> Destination City</label>
+          <select id="planner-city-select" class="form-control">
+            <option value="1">Coimbatore, Tamil Nadu</option>
+            <option value="2">Chennai, Tamil Nadu</option>
+            <option value="3" selected>Ooty, Tamil Nadu</option>
+            <option value="4">Madurai, Tamil Nadu</option>
+            <option value="5">Salem, Tamil Nadu</option>
+            <option value="6">Bengaluru, Karnataka</option>
+            <option value="7">Kodaikanal, Tamil Nadu</option>
+            <option value="8">Pondicherry, Puducherry</option>
+            <option value="9">Kanyakumari, Tamil Nadu</option>
+            <option value="10">Thanjavur, Tamil Nadu</option>
+            <option value="11">Mysuru, Karnataka</option>
+            <option value="12">Munnar, Kerala</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label"><i class="fa-solid fa-calendar-days" style="color:var(--primary-light);"></i> Duration (Days)</label>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary planner-day-btn" data-days="1" style="flex: 1; min-width: 60px;">1 Day</button>
+            <button type="button" class="btn btn-secondary planner-day-btn" data-days="2" style="flex: 1; min-width: 60px;">2 Days</button>
+            <button type="button" class="btn btn-secondary planner-day-btn active" data-days="3" style="flex: 1; min-width: 60px;">3 Days</button>
+            <button type="button" class="btn btn-secondary planner-day-btn" data-days="4" style="flex: 1; min-width: 60px;">4 Days</button>
+            <button type="button" class="btn btn-secondary planner-day-btn" data-days="5" style="flex: 1; min-width: 60px;">5 Days</button>
+            <button type="button" class="btn btn-secondary planner-day-btn" data-days="7" style="flex: 1; min-width: 60px;">7 Days</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interests -->
+      <div class="form-group">
+        <label class="form-label"><i class="fa-solid fa-heart" style="color:var(--accent-coral);"></i> Select Trip Interests</label>
+        <div class="interest-checkbox-group">
+          <label class="interest-checkbox-label checked">
+            <input type="checkbox" value="nature" checked /> <i class="fa-solid fa-tree"></i> Nature &amp; Scenery
+          </label>
+          <label class="interest-checkbox-label checked">
+            <input type="checkbox" value="temple" checked /> <i class="fa-solid fa-om"></i> Sacred Temples
+          </label>
+          <label class="interest-checkbox-label checked">
+            <input type="checkbox" value="historical" checked /> <i class="fa-solid fa-landmark"></i> Historical Heritage
+          </label>
+          <label class="interest-checkbox-label checked">
+            <input type="checkbox" value="shopping" checked /> <i class="fa-solid fa-bag-shopping"></i> Shopping &amp; Crafts
+          </label>
+          <label class="interest-checkbox-label">
+            <input type="checkbox" value="adventure" /> <i class="fa-solid fa-compass"></i> Adventure Pursuits
+          </label>
+          <label class="interest-checkbox-label">
+            <input type="checkbox" value="entertainment" /> <i class="fa-solid fa-film"></i> Family Entertainment
+          </label>
+          <label class="interest-checkbox-label">
+            <input type="checkbox" value="rural" /> <i class="fa-solid fa-wheat-awn"></i> Rural &amp; Agro-Tourism
+          </label>
+        </div>
+      </div>
+
+      <!-- Budget Level -->
+      <div class="form-group">
+        <label class="form-label"><i class="fa-solid fa-wallet" style="color:var(--accent-emerald);"></i> Budget Level</label>
+        <div class="budget-toggle-group">
+          <div class="budget-toggle-card" data-budget="budget">
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-emerald);">₹</div>
+            <strong style="color: #fff; font-size: 0.95rem;">Budget-Friendly</strong>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Est. ~₹1,600/day</div>
+          </div>
+          <div class="budget-toggle-card active" data-budget="moderate">
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary-light);">₹₹</div>
+            <strong style="color: #fff; font-size: 0.95rem;">Moderate (Comfort)</strong>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Est. ~₹3,800/day</div>
+          </div>
+          <div class="budget-toggle-card" data-budget="luxury">
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--accent-amber);">₹₹₹</div>
+            <strong style="color: #fff; font-size: 0.95rem;">Luxury &amp; Comfort</strong>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Est. ~₹8,500/day</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-generate-plan" class="btn btn-primary btn-block btn-lg" style="margin-top: 24px;">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Smart Itinerary
+      </button>
+    </div>
+
+    <!-- Generated Itinerary Container -->
+    <div id="planner-results-container" class="itinerary-results" style="display: none; margin-top: 36px;">
+      <!-- Populated by window.plannerCtrl -->
+    </div>
+
+  </main>
+
+  <!-- ================= Footer ================= -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <div class="brand-text" style="font-size: 1.4rem;">CITY<span>MATE</span></div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 6px;">Your Smart City Tourist Guide &amp; Route Planner</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html" class="footer-link">Home</a>
+        <a href="places.html" class="footer-link">Places</a>
+        <a href="hotels.html" class="footer-link">Hotels</a>
+        <a href="restaurants.html" class="footer-link">Restaurants</a>
+        <a href="map.html" class="footer-link">Map</a>
+        <a href="planner.html" class="footer-link active">Trip Planner</a>
+      </div>
+      <div style="color: var(--text-muted); font-size: 0.8rem;">
+        &copy; 2026 CityMate. All rights reserved. Powered by Leaflet &amp; OpenStreetMap.
+      </div>
+    </div>
+  </footer>
+
+  <!-- CityMate Core Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/planner.js"></script>
+  <script src="js/script.js"></script>
+
+  <script>
+    // Automatically trigger itinerary generation on load
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (window.plannerCtrl) {
+          window.plannerCtrl.selectedDays = 3;
+          window.plannerCtrl.generatePlan();
+        }
+      }, 250);
+    });
+  </script>
+</body>
+</html>

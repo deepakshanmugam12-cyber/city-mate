@@ -180,6 +180,24 @@
           const lat = parseFloat(parts[0]);
           const lng = parseFloat(parts[1]);
           if (!isNaN(lat) && !isNaN(lng)) {
+            if (!cityId) {
+              // Automatically detect closest city
+              let closestCityId = 1;
+              let minDiff = Infinity;
+              for (const [cId, coords] of Object.entries(this.cityCoordinates)) {
+                const diff = Math.hypot(coords.lat - lat, coords.lng - lng);
+                if (diff < minDiff) {
+                  minDiff = diff;
+                  closestCityId = Number(cId);
+                }
+              }
+              if (closestCityId !== this.selectedCityId) {
+                this.selectedCityId = closestCityId;
+                const citySelect = document.getElementById('map-city-select');
+                if (citySelect) citySelect.value = String(closestCityId);
+                this.setCity(closestCityId);
+              }
+            }
             setTimeout(() => {
               this.routeTo(lat, lng, name);
             }, 600);
@@ -885,7 +903,12 @@
       if (!panel) return;
 
       const currentCity = this.cityCoordinates[this.selectedCityId] || this.cityCoordinates[1];
-      const allPoints = [...this.places, ...this.services];
+      let allPoints = [...this.places, ...this.services];
+      if (allPoints.length === 0 && window.SEED_DATA) {
+        const cPlaces = (window.SEED_DATA.places || []).filter(p => Number(p.city_id) === Number(this.selectedCityId));
+        const cServices = (window.SEED_DATA.services || []).filter(s => Number(s.city_id) === Number(this.selectedCityId));
+        allPoints = [...cPlaces, ...cServices];
+      }
 
       const optionsHtml = allPoints.map(p => `
         <option value="${p.lat},${p.lng}">${p.name} (${p.category || p.service_type || 'Place'})</option>
@@ -1106,6 +1129,17 @@
             window.showToast(msg, 'warning');
           } else {
             alert(msg);
+          }
+
+          if (triggerRoutingAfterGps && this.destinationPoint) {
+            const currentCity = this.cityCoordinates[this.selectedCityId] || this.cityCoordinates[1];
+            this.startPoint = {
+              lat: currentCity.lat,
+              lng: currentCity.lng,
+              name: `${currentCity.name} Center`,
+              isGps: false
+            };
+            this.calculateAndDrawRoute();
           }
         },
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
